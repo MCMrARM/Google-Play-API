@@ -1,0 +1,12 @@
+#include "rand.h"
+
+using namespace playdl;
+
+bool rand::initialized = false;
+std::mt19937 rand::rng;
+
+void rand::initialize() {
+    rng = std::mt19937(std::random_device{}());
+    rng.discard(700000);
+    initialized = true;
+}

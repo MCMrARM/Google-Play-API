@@ -46,6 +46,18 @@ void config::set(std::string name, std::string val) {
     entries[name] = {false, val, {}};
 }
 
+void config::set_int(std::string name, int val) {
+    entries[name] = {false, std::to_string(val), {}};
+}
+
+void config::set_long(std::string name, long long val) {
+    entries[name] = {false, std::to_string(val), {}};
+}
+
+void config::set_bool(std::string name, bool b) {
+    entries[name] = {false, b ? "true" : "false", {}};
+}
+
 void config::set_array(std::string name, std::vector<std::string> val) {
     entries[name] = {true, std::string(), val};
 }

@@ -1,7 +1,6 @@
 #include "checkin.h"
 
 #include <ctime>
-#include <fstream>
 #include "gsf.pb.h"
 #include "device_info.h"
 #include "rand.h"
@@ -134,6 +133,7 @@ void checkin_handler::do_checkin() {
 
     http_request http("https://android.clients.google.com/checkin");
     http.add_header("Content-type", "application/x-protobuffer");
+    http.set_encoding("gzip,deflate");
     http.add_header("Content-encoding", "gzip");
     http.add_header("Accept-encoding", "gzip");
     http.set_method(http_method::POST);
@@ -144,5 +144,17 @@ void checkin_handler::do_checkin() {
     printf("Checkin data: %s\n", req.DebugString().c_str());
 #endif
     http.set_gzip_body(req.SerializeAsString());
-    http_response resp = http.perform();
+    http_response http_resp = http.perform();
+    if (!http_resp)
+        throw std::runtime_error("Failed to send checkin");
+
+    proto::AndroidCheckinResponse resp;
+    if (!resp.ParseFromString(http_resp.get_body()))
+        throw std::runtime_error("Failed to parse checkin");
+#ifndef NDEBUG
+    printf("Checkin response: %s\n", resp.DebugString().c_str());
+#endif
+    device.android_id = resp.androidid();
+    device.security_token = resp.securitytoken();
+    device.device_data_version_info = resp.devicedataversioninfo();
 }

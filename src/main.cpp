@@ -119,13 +119,26 @@ int main() {
 
     device_info device;
 
+    std::string device_path = "devices/default.conf";
+
+    std::ifstream device_conf_file (device_path);
+    config device_conf;
+    device_conf.load(device_conf_file);
+    device.load(device_conf);
+    conf.load_device(device_path, device);
+    device.generate_fields();
+    conf.save_device(device_path, device);
+
     checkin_handler checkin (device);
     if (conf.user_token.length() <= 0) {
         do_interactive_auth(checkin.get_login());
     } else {
         do_auth_from_config(checkin.get_login());
     }
-    checkin.do_checkin();
+    if (device.android_id == 0) {
+        checkin.do_checkin();
+        conf.save_device(device_path, device);
+    }
 
     curl_global_cleanup();
     google::protobuf::ShutdownProtobufLibrary();

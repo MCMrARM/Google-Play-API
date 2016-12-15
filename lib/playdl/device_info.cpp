@@ -170,9 +170,6 @@ std::string device_info::get_string_android_id() const {
 }
 
 void device_info::load(config& conf) {
-    id = conf.get("id", "");
-    if (id == "")
-        throw std::runtime_error("Device configuration file must have an identifier");
     type = device_type_from_string(conf.get("device_type", device_type_to_string(type)));
     build_fingerprint = conf.get("build.fingerprint", build_fingerprint);
     build_id = conf.get("build.id", build_id);

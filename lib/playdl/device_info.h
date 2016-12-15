@@ -42,7 +42,6 @@ struct device_info {
     // constants
 
     // some made up data to fall back to in case user doesn't specify a valid device
-    std::string id = "default";
     device_type type = device_type::tablet;
     std::string build_fingerprint = "diy/desktop/desktop:6.0/DSKTOP/desktop:user/release-keys";
     std::string build_id = "DSKTOP";
@@ -116,7 +115,7 @@ struct device_info {
 
     long long last_checkin_time = 0; // 0 if never
     unsigned long long android_id = 0;
-    unsigned long long security_token;
+    unsigned long long security_token = 0;
     std::string device_data_version_info;
     long long random_logging_id = 0;
 

@@ -13,8 +13,8 @@ struct app_config {
 
     void save();
 
-    void load_device(playdl::device_info& device);
+    void load_device(const std::string& device_path, playdl::device_info& device);
 
-    void save_device(playdl::device_info& device);
+    void save_device(const std::string& device_path, playdl::device_info& device);
 
 };

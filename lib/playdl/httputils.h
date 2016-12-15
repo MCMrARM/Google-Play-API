@@ -53,10 +53,11 @@ class http_request {
 private:
 
     std::string url;
-    std::string user_agent;
     std::string body;
     http_method method;
     std::map<std::string, std::string> headers;
+    std::string user_agent;
+    std::string encoding;
 
 public:
 
@@ -65,8 +66,6 @@ public:
     http_request(std::string url) : url(url) { }
 
     void set_url(const std::string& url) { this->url = url; }
-
-    void set_user_agent(const std::string& ua) { this->user_agent = ua; }
 
     void set_body(const std::string& str) { this->body = str; }
 
@@ -77,6 +76,10 @@ public:
     void set_method(http_method method) { this->method = method; }
 
     void add_header(const std::string& key, const std::string& value);
+
+    void set_user_agent(const std::string& ua) { this->user_agent = ua; }
+
+    void set_encoding(const std::string& encoding) { this->encoding = encoding; }
 
     http_response perform();
 

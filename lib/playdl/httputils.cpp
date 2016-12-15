@@ -119,6 +119,8 @@ http_response http_request::perform() {
     }
     if (user_agent.length() > 0)
         curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent.c_str());
+    if (encoding.length() > 0)
+        curl_easy_setopt(curl, CURLOPT_ENCODING, encoding.c_str());
     if (body.length() > 0) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) body.length());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());

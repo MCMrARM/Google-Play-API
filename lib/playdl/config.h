@@ -39,7 +39,14 @@ public:
 
     void set(std::string name, std::string val);
 
+    void set_int(std::string name, int val);
+
+    void set_long(std::string name, long long val);
+
+    void set_bool(std::string name, bool b);
+
     void set_array(std::string name, std::vector<std::string> val);
+
 
     std::string get(std::string name, std::string default_val = "") const;
 

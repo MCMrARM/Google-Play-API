@@ -3,7 +3,7 @@ syntax = "proto2";
 // generated with https://github.com/egirault/googleplay-api/blob/master/androguard/androproto.py
 // then modified a bit by hand to add the new fields that were added after the move to gms from gsf
 // also look at https://github.com/microg/android_packages_apps_GmsCore/blob/master/play-services-core/src/main/protos-repo/checkin.proto
-package playdl.proto.gsf;
+package playapi.proto.gsf;
 
 message AndroidCheckinRequest {
     optional string imei = 1;

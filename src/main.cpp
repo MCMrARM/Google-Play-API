@@ -1,14 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <curl/curl.h>
-#include <playdl/login.h>
-#include <playdl/device_info.h>
-#include <playdl/config.h>
-#include <playdl/checkin.h>
-#include <gplay.pb.h>
+#include <playapi/login.h>
+#include <playapi/device_info.h>
+#include <playapi/config.h>
+#include <playapi/checkin.h>
+#include <gsf.pb.h>
 #include "config.h"
 
-using namespace playdl;
+using namespace playapi;
 
 app_config conf;
 

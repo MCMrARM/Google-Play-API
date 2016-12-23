@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace playdl {
+namespace playapi {
 
 class config;
 

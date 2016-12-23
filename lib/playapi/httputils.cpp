@@ -4,7 +4,7 @@
 #include <sstream>
 #include <zlib.h>
 
-using namespace playdl;
+using namespace playapi;
 
 void url_encoded_entity::add_pair(const std::string& key, const std::string& val) {
     pairs[key] = val;

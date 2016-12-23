@@ -2,7 +2,7 @@
 
 #include <random>
 
-namespace playdl {
+namespace playapi {
 
 class rand {
 

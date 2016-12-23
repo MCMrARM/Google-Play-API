@@ -1,9 +1,12 @@
 #pragma once
 
+#include <string>
 #include <vector>
-#include "login.h"
 
-namespace playdl {
+namespace playapi {
+
+class device_info;
+class login_api;
 
 class checkin_api {
 

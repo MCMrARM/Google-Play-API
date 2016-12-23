@@ -5,7 +5,7 @@
 #include <vector>
 #include <regex>
 
-namespace playdl {
+namespace playapi {
 
 class config {
 

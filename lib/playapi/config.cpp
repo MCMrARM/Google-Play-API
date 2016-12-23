@@ -2,7 +2,7 @@
 
 #include <regex>
 
-using namespace playdl;
+using namespace playapi;
 
 std::regex config::escape_key_regex("=|\\\\|;");
 std::regex config::unescape_key_regex("\\\\(?==|;)"); // remove backslashes before special chars

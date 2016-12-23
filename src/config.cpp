@@ -1,10 +1,10 @@
 #include "config.h"
 
 #include <fstream>
-#include <playdl/config.h>
-#include <playdl/device_info.h>
+#include <playapi/config.h>
+#include <playapi/device_info.h>
 
-using namespace playdl;
+using namespace playapi;
 
 void app_config::load() {
     config c;
@@ -25,7 +25,7 @@ void app_config::save() {
     c.save(s);
 }
 
-void app_config::load_device(const std::string& device_path, playdl::device_info& device) {
+void app_config::load_device(const std::string& device_path, playapi::device_info& device) {
     config c;
     std::ifstream s(device_path + ".state");
     c.load(s);
@@ -39,7 +39,7 @@ void app_config::load_device(const std::string& device_path, playdl::device_info
     device.generated_serial_number = c.get("generated_serial_number", device.generated_serial_number);
 }
 
-void app_config::save_device(const std::string& device_path, playdl::device_info& device) {
+void app_config::save_device(const std::string& device_path, playapi::device_info& device) {
     config c;
 
     if (device.last_checkin_time != 0)

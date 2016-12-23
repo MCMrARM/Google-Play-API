@@ -1,12 +1,13 @@
 #include "checkin.h"
 
 #include <ctime>
-#include "gsf.pb.h"
+#include <gsf.pb.h>
 #include "device_info.h"
+#include "login.h"
 #include "rand.h"
 #include "httputils.h"
 
-using namespace playdl;
+using namespace playapi;
 
 checkin_api::checkin_api(device_info& device) : device(device) {
     //

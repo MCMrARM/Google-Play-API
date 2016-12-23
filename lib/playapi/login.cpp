@@ -5,7 +5,7 @@
 #include "httputils.h"
 #include "device_info.h"
 
-using namespace playdl;
+using namespace playapi;
 
 std::string login_api::perform(const login_request& request) {
     http_request req("https://android.clients.google.com/auth");

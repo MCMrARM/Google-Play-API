@@ -4,7 +4,7 @@
 #include <map>
 #include <curl/curl.h>
 
-namespace playdl {
+namespace playapi {
 
 class http_request;
 

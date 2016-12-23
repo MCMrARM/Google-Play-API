@@ -1,6 +1,6 @@
 #include "rand.h"
 
-using namespace playdl;
+using namespace playapi;
 
 bool rand::initialized = false;
 std::mt19937 rand::rng;

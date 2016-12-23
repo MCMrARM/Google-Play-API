@@ -7,9 +7,9 @@
 #include "config.h"
 #include "rand.h"
 
-using namespace playdl;
+using namespace playapi;
 
-device_type playdl::device_type_from_string(const std::string& str) {
+device_type playapi::device_type_from_string(const std::string& str) {
     if (str == "phone")
         return device_type::phone;
     if (str == "tablet")
@@ -22,7 +22,7 @@ device_type playdl::device_type_from_string(const std::string& str) {
         return device_type::wearable;
     return device_type::unknown;
 }
-std::string playdl::device_type_to_string(device_type type) {
+std::string playapi::device_type_to_string(device_type type) {
     switch (type) {
         case device_type::phone:
             return "phone";
@@ -39,7 +39,7 @@ std::string playdl::device_type_to_string(device_type type) {
     }
 }
 
-device_touch_screen playdl::device_touch_screen_from_string(const std::string& str) {
+device_touch_screen playapi::device_touch_screen_from_string(const std::string& str) {
     if (str == "notouch")
         return device_touch_screen::notouch;
     if (str == "stylus")
@@ -48,7 +48,7 @@ device_touch_screen playdl::device_touch_screen_from_string(const std::string& s
         return device_touch_screen::finger;
     return device_touch_screen::undefinied;
 }
-std::string playdl::device_touch_screen_to_string(device_touch_screen type) {
+std::string playapi::device_touch_screen_to_string(device_touch_screen type) {
     switch (type) {
         case device_touch_screen::notouch:
             return "notouch";
@@ -61,7 +61,7 @@ std::string playdl::device_touch_screen_to_string(device_touch_screen type) {
     }
 }
 
-device_keyboard playdl::device_keyboard_from_string(const std::string& str) {
+device_keyboard playapi::device_keyboard_from_string(const std::string& str) {
     if (str == "nokeys")
         return device_keyboard::nokeys;
     if (str == "qwerty")
@@ -70,7 +70,7 @@ device_keyboard playdl::device_keyboard_from_string(const std::string& str) {
         return device_keyboard::twelvekey;
     return device_keyboard::undefinied;
 }
-std::string playdl::device_keyboard_to_string(device_keyboard type) {
+std::string playapi::device_keyboard_to_string(device_keyboard type) {
     switch (type) {
         case device_keyboard::nokeys:
             return "nokeys";
@@ -83,7 +83,7 @@ std::string playdl::device_keyboard_to_string(device_keyboard type) {
     }
 }
 
-device_navigation playdl::device_navigation_from_string(const std::string& str) {
+device_navigation playapi::device_navigation_from_string(const std::string& str) {
     if (str == "nonav")
         return device_navigation::nonav;
     if (str == "dpad")
@@ -94,7 +94,7 @@ device_navigation playdl::device_navigation_from_string(const std::string& str) 
         return device_navigation::wheel;
     return device_navigation::undefinied;
 }
-std::string playdl::device_navigation_to_string(device_navigation type) {
+std::string playapi::device_navigation_to_string(device_navigation type) {
     switch (type) {
         case device_navigation::nonav:
             return "nonav";
@@ -109,7 +109,7 @@ std::string playdl::device_navigation_to_string(device_navigation type) {
     }
 }
 
-device_screen_layout playdl::device_screen_layout_from_string(const std::string& str) {
+device_screen_layout playapi::device_screen_layout_from_string(const std::string& str) {
     if (str == "small")
         return device_screen_layout::small;
     if (str == "normal")
@@ -120,7 +120,7 @@ device_screen_layout playdl::device_screen_layout_from_string(const std::string&
         return device_screen_layout::xlarge;
     return device_screen_layout::undefinied;
 }
-std::string playdl::device_screen_layout_to_string(device_screen_layout type) {
+std::string playapi::device_screen_layout_to_string(device_screen_layout type) {
     switch (type) {
         case device_screen_layout::small:
             return "small";

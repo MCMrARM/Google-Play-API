@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-namespace playdl { struct device_info; }
+namespace playapi { struct device_info; }
 
 struct app_config {
 
@@ -13,8 +13,8 @@ struct app_config {
 
     void save();
 
-    void load_device(const std::string& device_path, playdl::device_info& device);
+    void load_device(const std::string& device_path, playapi::device_info& device);
 
-    void save_device(const std::string& device_path, playdl::device_info& device);
+    void save_device(const std::string& device_path, playapi::device_info& device);
 
 };

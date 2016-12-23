@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-namespace playdl {
+namespace playapi {
 
 class device_info;
 

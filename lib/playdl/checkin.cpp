@@ -8,23 +8,33 @@
 
 using namespace playdl;
 
-checkin_handler::checkin_handler(device_info& device) : device(device), login("ac2dm", "com.google.android.gsf", device,
-                                                                              login_manager::certificate::google) {
+checkin_api::checkin_api(device_info& device) : device(device) {
     //
 }
 
-void checkin_handler::do_checkin() {
+void checkin_api::add_auth(login_api& login) {
+    auth_user user;
+    user.email = login.get_email();
+    user.auth_cookie = login.fetch_service_auth_cookie("ac2dm", "com.google.android.gsf",
+                                                       login_api::certificate::google);
+    assert(user.email.length() > 0 && user.auth_cookie.length() > 0);
+    auth.push_back(user);
+}
+
+void checkin_api::perform() {
+    assert(auth.size() > 0);
+
     device.generate_fields();
 
     // build checkin request
-    proto::AndroidCheckinRequest req;
+    proto::gsf::AndroidCheckinRequest req;
     req.set_version(3);
     req.set_fragment(0);
-    proto::AndroidCheckinProto* checkin = req.mutable_checkin();
+    proto::gsf::AndroidCheckinProto* checkin = req.mutable_checkin();
     checkin->set_devicetype((int) device.type);
     if (device.last_checkin_time == 0) {
         checkin->set_lastcheckinmsec(0);
-        proto::AndroidEventProto* event = checkin->add_event();
+        proto::gsf::AndroidEventProto* event = checkin->add_event();
         event->set_tag("event_log_start");
         event->set_timemsec(std::time(nullptr) * 1000LL -
                             rand::next_int<long long>(30LL * 1000LL, 5L * 60LL * 1000LL)); // 30s-5m before now
@@ -38,7 +48,7 @@ void checkin_handler::do_checkin() {
     if (device.android_id != 0)
         req.set_id((long long) device.android_id);
 
-    proto::AndroidBuildProto* build = checkin->mutable_build();
+    proto::gsf::AndroidBuildProto* build = checkin->mutable_build();
     if (device.build_fingerprint.length() > 0)
         build->set_id(device.build_fingerprint);
     if (device.build_product.length() > 0)
@@ -65,14 +75,14 @@ void checkin_handler::do_checkin() {
         build->set_client(device.build_client);
     build->set_googleservices(device.build_google_services);
     for (const auto& e : device.build_google_packages) {
-        proto::AndroidBuildProto::PackageVersion* pkg = build->add_googlepackage();
+        proto::gsf::AndroidBuildProto::PackageVersion* pkg = build->add_googlepackage();
         pkg->set_name(e.first);
         pkg->set_version(e.second);
     }
     if (device.build_security_patch.length() > 0)
         build->set_securitypatch(device.build_security_patch);
 
-    proto::DeviceConfigurationProto* config = req.mutable_deviceconfiguration();
+    proto::gsf::DeviceConfigurationProto* config = req.mutable_deviceconfiguration();
     config->set_touchscreen((int) device.config_touch_screen);
     config->set_keyboard((int) device.config_keyboard);
     config->set_navigation((int) device.config_navigation);
@@ -95,10 +105,10 @@ void checkin_handler::do_checkin() {
         config->add_glextension(e);
     config->set_smallestscreenwidthdp(device.config_smallest_screen_width_dp);
     config->set_lowramdevice(device.config_low_ram);
-    config->set_totalmem(device.config_total_ram);
-    config->set_cores(device.config_cores);
+    config->set_totalmemorybytes(device.config_total_ram);
+    config->set_maxnumofcpucores(device.config_cores);
     for (const auto& e : device.config_system_features) {
-        proto::DeviceConfigurationProto::FeatureWithGLVersion* feature = config->add_newsystemavailablefeature();
+        proto::gsf::DeviceConfigurationProto::FeatureWithGLVersion* feature = config->add_newsystemavailablefeature();
         feature->set_name(e.first);
         feature->set_glesversion(e.second);
     }
@@ -128,8 +138,10 @@ void checkin_handler::do_checkin() {
         req.set_serialnumber(device.serial_number);
     for (const auto& e : device.ota_certs)
         req.add_otacert(e);
-    req.add_accountcookie("[" + login.get_email() + "]");
-    req.add_accountcookie(login.get_auth_cookie());
+    for (const auto& user : auth) {
+        req.add_accountcookie("[" + user.email + "]");
+        req.add_accountcookie(user.auth_cookie);
+    }
 
     http_request http("https://android.clients.google.com/checkin");
     http.add_header("Content-type", "application/x-protobuffer");
@@ -148,7 +160,7 @@ void checkin_handler::do_checkin() {
     if (!http_resp)
         throw std::runtime_error("Failed to send checkin");
 
-    proto::AndroidCheckinResponse resp;
+    proto::gsf::AndroidCheckinResponse resp;
     if (!resp.ParseFromString(http_resp.get_body()))
         throw std::runtime_error("Failed to parse checkin");
 #ifndef NDEBUG

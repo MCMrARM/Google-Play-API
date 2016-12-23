@@ -5,14 +5,14 @@
 #include <playdl/device_info.h>
 #include <playdl/config.h>
 #include <playdl/checkin.h>
-#include "gsf.pb.h"
+#include <gplay.pb.h>
 #include "config.h"
 
 using namespace playdl;
 
 app_config conf;
 
-void do_interactive_auth(login_manager& login) {
+void do_interactive_auth(login_api& login) {
     auth_select_method:
     std::cout << "We haven't authorized you yet. Please select your preferred login method:" << std::endl;
     std::cout << "1. via login and password" << std::endl;
@@ -33,7 +33,7 @@ void do_interactive_auth(login_manager& login) {
         std::getline(std::cin, password);
         std::cout << "Authenticating..." << std::endl;
         try {
-            login.perform_login_using_password(email, password);
+            login.perform(email, password);
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified credentials: " << err.what() << std::endl;
             goto do_login_pass_auth;
@@ -46,9 +46,8 @@ void do_interactive_auth(login_manager& login) {
         std::cout << "Please enter your access token: ";
         std::string token;
         std::getline(std::cin, token);
-        login.perform_login_using_access_token(token);
         try {
-            login.perform_login();
+            login.perform(token);
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified token: " << err.what() << std::endl << std::endl;
             goto do_token_auth;
@@ -61,9 +60,8 @@ void do_interactive_auth(login_manager& login) {
         std::string token;
         std::getline(std::cin, token);
         login.set_token("", token);
-        login.perform_login();
         try {
-            login.perform_login();
+            login.verify();
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified token: " << err.what() << std::endl << std::endl;
             goto do_master_token_auth;
@@ -91,11 +89,11 @@ void do_interactive_auth(login_manager& login) {
         goto auth_select_method;
     }
 }
-void do_auth_from_config(login_manager& login) {
+void do_auth_from_config(login_api& login) {
     do_auth:
     login.set_token(conf.user_email, conf.user_token);
     try {
-        login.perform_login();
+        login.verify();
     } catch (std::runtime_error err) {
         std::cout << "Failed to login using a saved token: " << err.what() << std::endl;
         std::cout << "Would you like to delete it and authenticate again? [y/N]";
@@ -129,14 +127,16 @@ int main() {
     device.generate_fields();
     conf.save_device(device_path, device);
 
-    checkin_handler checkin (device);
+    login_api login (device);
     if (conf.user_token.length() <= 0) {
-        do_interactive_auth(checkin.get_login());
+        do_interactive_auth(login);
     } else {
-        do_auth_from_config(checkin.get_login());
+        do_auth_from_config(login);
     }
     if (device.android_id == 0) {
-        checkin.do_checkin();
+        checkin_api checkin (device);
+        checkin.add_auth(login);
+        checkin.perform();
         conf.save_device(device_path, device);
     }
 

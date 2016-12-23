@@ -7,19 +7,18 @@
 
 using namespace playdl;
 
-void login_manager::perform_login(bool via_password, const std::string& email, const std::string& password,
-                                  const std::string& master_token, bool is_access_token) {
+std::string login_api::perform(const login_request& request) {
     http_request req("https://android.clients.google.com/auth");
     req.set_user_agent("GoogleAuth/1.4 (" + device.build_product + " " + device.build_id + "); gzip");
     req.set_method(http_method::POST);
     url_encoded_entity ent;
     ent.add_pair("accountType", "HOSTED_OR_GOOGLE");
-    if (via_password) {
-        ent.add_pair("Email", email);
-        ent.add_pair("Passwd", password);
+    if (request.via_password) {
+        ent.add_pair("Email", request.email);
+        ent.add_pair("Passwd", request.password);
     } else {
-        ent.add_pair("Token", master_token);
-        if (is_access_token)
+        ent.add_pair("Token", request.token);
+        if (request.is_access_token)
             ent.add_pair("ACCESS_TOKEN", "1");
         if (email.length() <= 0) {
             ent.add_pair("add_account", "1");
@@ -34,14 +33,14 @@ void login_manager::perform_login(bool via_password, const std::string& email, c
     }
 
     ent.add_pair("has_permission", "1");
-    ent.add_pair("service", service);
+    ent.add_pair("service", request.service);
     ent.add_pair("source", "android");
-    ent.add_pair("app", app);
-    req.add_header("app", app);
+    ent.add_pair("app", request.app);
+    req.add_header("app", request.app);
     ent.add_pair("device_country", device.country);
     ent.add_pair("lang", device.locale);
     ent.add_pair("sdk_version", std::to_string(device.build_sdk_version));
-    if (cert == certificate::android)
+    if (request.cert == certificate::android)
         ent.add_pair("client_sig", "61ed377e85d386a8dfee6b864bd85b0bfaa5af81");
     else
         ent.add_pair("client_sig", "38918a453d07199354f8b19af05ec6562ced5788");
@@ -65,29 +64,38 @@ void login_manager::perform_login(bool via_password, const std::string& email, c
         throw std::runtime_error("Login error: " + respValMap.at("Error"));
     if (respValMap.count("Auth") <= 0)
         throw std::runtime_error("No auth cookie field returned");
-    set_auth_cookie(respValMap.at("Auth"));
-    if (via_password || is_access_token) {
+    auth_cookies[{request.service, request.app}] = respValMap.at("Auth");
+    if (request.via_password || request.is_access_token) {
         if (respValMap.count("Token") <= 0)
             throw std::runtime_error("No Oauth2 token returned");
         set_token(email, respValMap.at("Token"));
     }
-    if (is_access_token) {
+    if (request.is_access_token) {
         if (respValMap.count("Email") <= 0)
             throw std::runtime_error("No Email returned");
         this->email = respValMap.at("Email");
     }
+    return respValMap.at("Auth");
 }
 
-void login_manager::perform_login_using_password(const std::string& email, const std::string& password) {
-    return perform_login(true, email, password, std::string(), false);
+void login_api::perform(const std::string& email, const std::string& password) {
+    perform(login_request("ac2dm", "com.google.android.gsf", email, password));
 }
 
-void login_manager::perform_login_using_access_token(const std::string& access_token) {
-    return perform_login(true, std::string(), std::string(), access_token, true);
+void login_api::perform(const std::string& access_token) {
+    perform(login_request("ac2dm", "com.google.android.gsf", access_token, true));
 }
 
-void login_manager::perform_login() {
-    if (!has_token())
-        throw std::logic_error("No token given.");
-    return perform_login(false, email, std::string(), token, false);
+void login_api::verify() {
+    perform(login_request("ac2dm", "com.google.android.gsf", token, false));
+}
+
+std::string login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert) {
+    if (token.size() == 0)
+        throw std::runtime_error("No user authenticated.");
+    if (auth_cookies.count({service, app}) > 0) {
+        auto& cookie = auth_cookies.at({service, app});
+
+    }
+    return perform(login_request(service, app, token, false, cert));
 }

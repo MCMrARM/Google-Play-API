@@ -1,21 +1,28 @@
 #pragma once
 
+#include <vector>
 #include "login.h"
 
 namespace playdl {
 
-class checkin_handler {
+class checkin_api {
 
     device_info& device;
-    login_manager login;
+
+    struct auth_user {
+        std::string email, auth_cookie;
+    };
+    std::vector<auth_user> auth;
 
 public:
 
-    checkin_handler(device_info& device);
+    checkin_api(device_info& device);
 
-    login_manager& get_login() { return login; }
+    void add_auth(login_api& login);
 
-    void do_checkin();
+    void clear_auth() { auth.clear(); }
+
+    void perform();
 
 };
 

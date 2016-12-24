@@ -10,7 +10,7 @@ include_directories(lib/)
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/gsf.proto)
 
-set(LIB_UTIL_SOURCE_FILES lib/playapi/util/http.cpp lib/playapi/util/http.h lib/playapi/util/config.cpp lib/playapi/util/config.h lib/playapi/util/rand.cpp lib/playapi/util/rand.h)
+set(LIB_UTIL_SOURCE_FILES lib/playapi/util/http.cpp lib/playapi/util/http.h lib/playapi/util/config.cpp lib/playapi/util/config.h lib/playapi/util/rand.cpp lib/playapi/util/rand.h lib/playapi/util/base64.cpp lib/playapi/util/base64.h)
 set(LIB_SOURCE_FILES lib/playapi/login.cpp lib/playapi/login.h lib/playapi/device_info.cpp lib/playapi/device_info.h lib/playapi/checkin.cpp lib/playapi/checkin.h)
 set(SOURCE_FILES src/main.cpp src/config.cpp src/config.h)
 add_executable(gplaydl ${SOURCE_FILES} ${LIB_SOURCE_FILES} ${LIB_UTIL_SOURCE_FILES} ${PROTO_SRCS})

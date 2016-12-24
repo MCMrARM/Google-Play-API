@@ -2,7 +2,7 @@
 #include <pwd.h>
 #include "login.h"
 
-#include "httputils.h"
+#include "util/http.h"
 #include "device_info.h"
 
 using namespace playapi;

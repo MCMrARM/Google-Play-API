@@ -3,7 +3,7 @@
 #include <curl/curl.h>
 #include <playapi/login.h>
 #include <playapi/device_info.h>
-#include <playapi/config.h>
+#include <playapi/util/config.h>
 #include <playapi/checkin.h>
 #include <gsf.pb.h>
 #include "config.h"

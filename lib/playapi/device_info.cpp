@@ -4,8 +4,8 @@
 #include <iomanip>
 #include <climits>
 #include <cassert>
-#include "config.h"
-#include "rand.h"
+#include "util/config.h"
+#include "util/rand.h"
 
 using namespace playapi;
 

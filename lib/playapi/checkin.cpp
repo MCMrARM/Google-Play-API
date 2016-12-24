@@ -4,8 +4,8 @@
 #include <gsf.pb.h>
 #include "device_info.h"
 #include "login.h"
-#include "rand.h"
-#include "httputils.h"
+#include "util/rand.h"
+#include "util/http.h"
 
 using namespace playapi;
 

@@ -7,6 +7,7 @@
 #include <playapi/checkin.h>
 #include <playapi/api.h>
 #include <gsf.pb.h>
+#include <zlib.h>
 #include "config.h"
 
 using namespace playapi;
@@ -110,6 +111,21 @@ void do_auth_from_config(login_api& login) {
     }
 }
 
+static void do_zlib_inflate(z_stream& zs, FILE* file, char* data, size_t len, int flags) {
+    char buf[4096];
+    int ret;
+    zs.avail_in = (uInt) len;
+    zs.next_in = (unsigned char*) data;
+    zs.avail_out = 0;
+    while (zs.avail_out == 0) {
+        zs.avail_out = 4096;
+        zs.next_out = (unsigned char*) buf;
+        ret = inflate(&zs, flags);
+        assert(ret != Z_STREAM_ERROR);
+        fwrite(buf, 1, sizeof(buf) - zs.avail_out, file);
+    }
+}
+
 int main() {
     curl_global_init(CURL_GLOBAL_ALL);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -151,6 +167,7 @@ int main() {
     api play(device);
     play.set_auth(login);
     play.set_checkin_data(dev_state.checkin_data);
+    dev_state.load_api_data(login.get_email(), play);
     if (play.toc_cookie.length() == 0 || play.device_config_token.length() == 0) {
         play.fetch_user_settings();
         auto toc = play.fetch_toc();
@@ -191,12 +208,53 @@ int main() {
         std::cout << "No version code found. Did you specify a valid package name?\n";
         return 1;
     }
-    if (details.offer(0).checkoutflowrequired()) {
+
+    // TODO: Free app purchase flow
+
+    {
         // TODO: we should pass a valid library token here - however that requires implementation of the
         // replicateLibrary API call
-        play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string());
+        auto resp = play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string());
+        auto dd = resp.payload().deliveryresponse().appdeliverydata();
+        http_request req(dd.gzippeddownloadurl());
+        req.set_encoding("gzip,deflate");
+        req.add_header("Accept-Encoding", "identity");
+        auto cookie = dd.downloadauthcookie(0);
+        req.add_header("Cookie", cookie.name() + "=" + cookie.value());
+        req.set_user_agent("AndroidDownloadManager/" + device.build_version_string + " (Linux; U; Android " +
+                           device.build_version_string + "; " + device.build_model + " Build/" + device.build_id + ")");
+        req.set_follow_location(true);
+        req.set_timeout(0L);
+
+        FILE* file = fopen(
+                (pkg_name + " " + std::to_string(details.details().appdetails().versioncode()) + ".apk").c_str(), "w");
+        z_stream zs;
+        zs.zalloc = Z_NULL;
+        zs.zfree = Z_NULL;
+        zs.opaque = Z_NULL;
+        int ret = inflateInit2(&zs, 31);
+        assert(ret == Z_OK);
+
+        req.set_custom_output_func([file, &zs](char* data, size_t size) {
+            do_zlib_inflate(zs, file, data, size, Z_NO_FLUSH);
+            return size;
+        });
+
+        req.set_progress_callback([&req](curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
+            if (dltotal > 0) {
+                printf("\rDownloaded %i%% [%li/%li MiB]", (int) (dlnow * 100 / dltotal), dlnow / 1024 / 1024,
+                       dltotal / 1024 / 1024);
+                std::cout.flush();
+            }
+        });
+        std::cout << "\nStarting download...";
+        req.perform();
+
+        do_zlib_inflate(zs, file, Z_NULL, 0, Z_FINISH);
+        inflateEnd(&zs);
+
+        fclose(file);
     }
-    // TODO: free apps 'purchase' flow
 
     curl_global_cleanup();
     google::protobuf::ShutdownProtobufLibrary();

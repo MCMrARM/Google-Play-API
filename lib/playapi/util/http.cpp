@@ -96,9 +96,17 @@ void http_request::set_gzip_body(const std::string& str) {
     body = std::move(out);
 }
 
-size_t curl_stringstream_write_func(void* ptr, size_t size, size_t nmemb, std::stringstream* s) {
+size_t http_request::curl_stringstream_write_func(void* ptr, size_t size, size_t nmemb, std::stringstream* s) {
     s->write((char*) ptr, size * nmemb);
     return size * nmemb;
+}
+size_t http_request::curl_write_func(void* ptr, size_t size, size_t nmemb, http_request* s) {
+    return s->callback_output((char*) ptr, size * nmemb);
+}
+int http_request::curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
+    http_request* req = (http_request*) ptr;
+    req->callback_progress(dltotal, dlnow, ultotal, ulnow);
+    return 0;
 }
 
 http_response http_request::perform() {
@@ -134,14 +142,25 @@ http_response http_request::perform() {
         }
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
     }
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, follow_location ? 1L : 0L);
 
 #ifndef NDEBUG
     printf("http request: %s, body = %s\n", url.c_str(), body.c_str());
 #endif
     std::stringstream output;
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_stringstream_write_func);
+    if (callback_output) {
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
+    } else {
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_stringstream_write_func);
+    }
+    if (callback_progress) {
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    }
     CURLcode ret = curl_easy_perform(curl);
 #ifndef NDEBUG
     printf("http response body: %s\n", output.str().c_str());

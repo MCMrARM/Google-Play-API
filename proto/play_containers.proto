@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.containers;
+
+import "play_common.proto";
+
+message ContainerMetadata {
+    optional string browseUrl = 1;
+    optional string nextPageUrl = 2;
+    optional double relevance = 3;
+    optional int64 estimatedResults = 4;
+    optional string analyticsCookie = 5;
+    optional bool ordered = 6;
+    repeated ContainerView containerView = 7;
+    optional Image leftIcon = 8;
+}
+message ContainerView {
+    optional bool selected = 1;
+    optional string title = 2;
+    optional string listUrl = 3;
+    optional bytes serverLogsCookie = 4;
+}

@@ -1,0 +1,53 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.browse;
+
+import "play_common.proto";
+import "play_link.proto";
+
+message BrowseResponse {
+    optional string contentsUrl = 1;
+    optional string promoUrl = 2;
+    repeated BrowseLink category = 3;
+    repeated BrowseLink breadcrumb = 4;
+    repeated QuickLink quickLink = 5;
+    optional bytes serverLogsCookie = 6;
+    optional string title = 7;
+    optional int32 backendId = 8;
+    repeated BrowseTab browseTab = 9;
+    optional int32 landingTabIndex = 10;
+    optional int32 quickLinkTabIndex = 11;
+    optional int32 quickLinkFallbackTabIndex = 12;
+    optional bool isFamilySafe = 14;
+    optional int32 tabStyle = 15;
+}
+message BrowseTab {
+    optional string title = 1;
+    optional bytes serverLogsCookie = 2;
+    optional string listUrl = 3;
+    repeated BrowseLink category = 4;
+    repeated QuickLink quickLink = 5;
+    optional string quickLinkTitle = 6;
+    optional string categoriesTitle = 7;
+    optional int32 backendId = 8;
+    optional string highlightsBannerUrl = 9;
+    optional TabBubble entertainmentTabBubble = 10;
+}
+message BrowseLink {
+    optional string name = 1;
+    optional string dataUrl = 3;
+    optional bytes serverLogsCookie = 4;
+    optional Image image = 5;
+}
+message QuickLink {
+    optional string name = 1;
+    optional Image image = 2;
+    optional link.ResolvedLink link = 3;
+    optional bool displayRequired = 4;
+    optional bytes serverLogsCookie = 5;
+    optional int32 backendId = 6;
+    optional bool prismStyle = 7;
+}
+message TabBubble {
+    optional string text = 1;
+}

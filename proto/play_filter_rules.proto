@@ -1,0 +1,53 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.filter_rules;
+
+import "play_common.proto";
+import "play_download.proto";
+
+message Availability {
+    optional int32 restriction = 5;
+    optional int32 offerType = 6;
+    optional Rule rule = 7;
+    repeated group PerDeviceAvailabilityRestriction = 9 {
+        optional fixed64 androidId = 10;
+        optional int32 deviceRestriction = 11;
+        optional int64 channelId = 12;
+        optional FilterEvaluationInfo filterInfo = 15;
+        optional bool availableIfOwned = 22;
+    }
+    optional bool availableIfOwned = 13;
+    repeated download.Install install = 14;
+    optional FilterEvaluationInfo filterInfo = 16;
+    optional OwnershipInfo ownershipInfo = 17;
+    repeated AvailabilityProblem availabilityProblem = 18;
+    optional bool hidden = 21;
+}
+message AvailabilityProblem {
+    optional int32 problemType = 1;
+    repeated string missingValue = 2;
+}
+message FilterEvaluationInfo {
+    repeated RuleEvaluation ruleEvaluation = 1;
+}
+message Rule {
+    optional bool negate = 1;
+    optional int32 operator = 2;
+    optional int32 key = 3;
+    repeated string stringArg = 4;
+    repeated int64 longArg = 5;
+    repeated double doubleArg = 6;
+    repeated Rule subrule = 7;
+    optional int32 responseCode = 8;
+    optional string comment = 9;
+    repeated fixed64 stringArgHash = 10;
+    optional int32 availabilityProblemType = 12;
+    optional bool includeMissingValues = 13;
+}
+message RuleEvaluation {
+    optional Rule rule = 1;
+    repeated string actualStringValue = 2;
+    repeated int64 actualLongValue = 3;
+    repeated bool actualBoolValue = 4;
+    repeated double actualDoubleValue = 5;
+}

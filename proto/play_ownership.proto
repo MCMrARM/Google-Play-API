@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.ownership;
+
+import "play_common.proto";
+
+message OwnershipInfo {
+    optional int64 initiationTimestampMsec = 1;
+    optional int64 validUntilTimestampMsec = 2;
+    optional bool autoRenewing = 3;
+    optional int64 refundTimeoutTimestampMsec = 4;
+    optional int64 postDeliveryRefundWindowMsec = 5;
+    optional SignedData developerPurchaseInfo = 6;
+    optional bool preordered = 7;
+    optional bool hidden = 8;
+    optional RentalTerms rentalTerms = 9;
+    optional GroupLicenseInfo groupLicenseInfo = 10;
+    optional LicensedDocumentInfo licensedDocumentInfo = 11;
+    optional int32 quantity = 12;
+    optional int64 libraryExpirationTimestampMsec = 14;
+    optional LibraryVoucher libraryVoucher = 15;
+    optional Docid bundleDocid = 16;
+    optional bool bonus = 17;
+    optional int64 storedValidUntilTimestampMsec = 18;
+}

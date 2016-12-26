@@ -2,8 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace playapi {
+
+namespace proto { namespace gsf { class DeviceConfigurationProto; }}
 
 class config;
 
@@ -79,13 +82,14 @@ struct device_info {
     std::vector<std::string> config_native_platforms = {"x86", "armeabi-x7a", "armeabi"};
     int config_screen_width = 1920;
     int config_screen_height = 1080;
-    std::vector<std::string> config_system_supported_locales = { "en", "en-US" };
+    std::vector<std::string> config_system_supported_locales = {"en", "en-US"};
     std::vector<std::string> config_gl_extensions;
     int config_smallest_screen_width_dp = 1080;
     bool config_low_ram = false;
     long long config_total_ram = 4093796352;
     int config_cores = 4;
     bool voice_capable = false; // this is not in config because it's somewhere else in the proto file
+    bool wide_screen = false;
     std::vector<std::string> ota_certs;
 
     bool config_keyguard_device_secure = false;
@@ -107,16 +111,12 @@ struct device_info {
     std::string meid;
     bool meid_generate = false;
     std::string serial_number;
-    bool serial_number_generate;
+    bool serial_number_generate = false;
     std::string serial_number_generate_chars;
     int serial_number_generate_length = 8;
 
     // fields
 
-    long long last_checkin_time = 0; // 0 if never
-    unsigned long long android_id = 0;
-    unsigned long long security_token = 0;
-    std::string device_data_version_info;
     long long random_logging_id = 0;
 
     std::string generated_mac_addr;
@@ -127,9 +127,10 @@ struct device_info {
 
     void load(config& conf);
 
-    std::string get_string_android_id() const;
-
     void generate_fields();
+
+    void fill_device_config_proto(proto::gsf::DeviceConfigurationProto& proto,
+                                  bool feature_add_gles_version_if_zero = false);
 
 };
 

@@ -1,0 +1,227 @@
+syntax = "proto2";
+
+package playapi.proto.finsky;
+
+message HttpCookie {
+    optional string name = 1;
+    optional string value = 2;
+}
+message TimePeriod {
+    optional int32 unit = 1;
+    optional int32 count = 2;
+}
+message MonthAndDay {
+    optional int32 month = 1;
+    optional int32 day = 2;
+}
+message SignedData {
+    optional string signedData = 1;
+    optional string signature = 2;
+}
+message Docid {
+    optional string backendDocid = 1;
+    optional int32 type = 2;
+    optional int32 backend = 3;
+}
+
+message Offer {
+    optional int64 micros = 1;
+    optional string currencyCode = 2;
+    optional string formattedAmount = 3;
+    repeated Offer convertedPrice = 4;
+    optional bool checkoutFlowRequired = 5;
+    optional int64 fullPriceMicros = 6;
+    optional string formattedFullAmount = 7;
+    optional int32 offerType = 8;
+    optional RentalTerms rentalTerms = 9;
+    optional int64 onSaleDate = 10;
+    repeated string promotionLabel = 11;
+    optional SubscriptionTerms subscriptionTerms = 12;
+    optional string formattedName = 13;
+    optional string formattedDescription = 14;
+    optional bool preorder = 15;
+    optional int32 onSaleDateDisplayTimeZoneOffsetMsec = 16;
+    optional int32 licensedOfferType = 17;
+    optional SubscriptionContentTerms subscriptionContentTerms = 18;
+    optional string offerId = 19;
+    optional int64 preorderFulfillmentDisplayDate = 20;
+    optional LicenseTerms licenseTerms = 21;
+    optional bool temporarilyFree = 22;
+    optional VoucherOfferTerms voucherTerms = 23;
+    repeated OfferPayment offerPayment = 24;
+    optional bool repeatLastPayment = 25;
+    optional string buyButtonLabel = 26;
+    optional bool instantPurchaseEnabled = 27;
+}
+message RentalTerms {
+    optional int32 DEPRECATEDGrantPeriodSeconds = 1;
+    optional int32 DEPRECATEDActivatePeriodSeconds = 2;
+    optional TimePeriod grantPeriod = 3;
+    optional TimePeriod activatePeriod = 4;
+    optional int64 grantEndTimeSeconds = 5;
+}
+message OfferPayment {
+    optional int64 micros = 1;
+    optional string currencyCode = 2;
+    optional OfferPaymentPeriod offerPaymentPeriod = 3;
+    repeated OfferPaymentOverride offerPaymentOverride = 4;
+}
+message OfferPaymentPeriod {
+    optional TimePeriod duration = 1;
+    optional MonthAndDay start = 2;
+    optional MonthAndDay end = 3;
+}
+message OfferPaymentOverride {
+    optional int64 micros = 1;
+    optional MonthAndDay start = 2;
+    optional MonthAndDay end = 3;
+}
+message SeasonalSubscriptionInfo {
+    message Payment {
+        optional int64 micros = 1;
+        optional string currencyCode = 2;
+        optional string formattedAmount = 3;
+        optional TimePeriod period = 4;
+    }
+    optional MonthAndDay periodStart = 1;
+    optional MonthAndDay periodEnd = 2;
+    optional bool prorated = 4;
+    optional Payment postTrialConversionPayment = 5;
+}
+message SubscriptionTerms {
+    message SubscriptionReplacement {
+        optional Docid newDocid = 1;
+        repeated Docid oldDocid = 2;
+        optional bool keepNextRecurrenceTime = 3;
+        optional bool replaceOnFirstRecurrence = 4;
+    }
+    optional TimePeriod recurringPeriod = 1;
+    optional TimePeriod trialPeriod = 2;
+    optional string formattedPriceWithRecurrencePeriod = 3;
+    optional SeasonalSubscriptionInfo seasonalSubscriptionInfo = 4;
+    repeated Docid replaceDocid = 5;
+    optional TimePeriod gracePeriod = 6;
+    optional bool resignup = 7;
+    optional int64 initialValidUntilTimestampMsec = 8;
+    optional string nextPaymentCurrencyCode = 9;
+    optional int64 nextPaymentPriceMicros = 10;
+    optional bool enableAppSpecifiedTrialPeriod = 11;
+    optional SubscriptionReplacement subscriptionReplacement = 12;
+}
+message SubscriptionContentTerms {
+    optional Docid requiredSubscription = 1;
+}
+
+message GroupLicenseKey {
+    optional fixed64 dasherCustomerId = 1;
+    optional Docid docid = 2;
+    optional int32 licensedOfferType = 3;
+    optional int32 type = 4;
+    optional int32 rentalPeriodDays = 5;
+}
+message GroupLicenseInfo {
+     optional int32 licensedOfferType = 1;
+     optional fixed64 gaiaGroupId = 2;
+     optional GroupLicenseKey groupLicenseKey = 3;
+}
+message LicenseTerms {
+    optional GroupLicenseKey groupLicenseKey = 1;
+}
+message LicensedDocumentInfo {
+    repeated fixed64 gaiaGroupId = 1;
+    optional string groupLicenseCheckoutOrderId = 2;
+    optional GroupLicenseKey groupLicenseKey = 3;
+    optional fixed64 assignedByGaiaId = 4;
+    optional string DEPRECATEDAssignmentId = 5;
+}
+
+message RedemptionRecordKey {
+    optional int64 publisherId = 1;
+    optional int64 campaignId = 2;
+    optional int64 codeGroupId = 3;
+    optional int64 recordId = 4;
+    optional int32 type = 5;
+}
+
+message VoucherId {
+    optional Docid voucherDocid = 1;
+    optional RedemptionRecordKey key = 2;
+}
+message VoucherOfferTerms {
+    repeated Docid voucherDocid = 1;
+    optional int64 voucherPriceMicros = 2;
+    optional string voucherFormattedAmount = 3;
+}
+message LibraryVoucher {
+    optional VoucherId voucherId = 1;
+}
+
+message OwnershipInfo {
+    optional int64 initiationTimestampMsec = 1;
+    optional int64 validUntilTimestampMsec = 2;
+    optional bool autoRenewing = 3;
+    optional int64 refundTimeoutTimestampMsec = 4;
+    optional int64 postDeliveryRefundWindowMsec = 5;
+    optional SignedData developerPurchaseInfo = 6;
+    optional bool preordered = 7;
+    optional bool hidden = 8;
+    optional RentalTerms rentalTerms = 9;
+    optional GroupLicenseInfo groupLicenseInfo = 10;
+    optional LicensedDocumentInfo licensedDocumentInfo = 11;
+    optional int32 quantity = 12;
+    optional int64 libraryExpirationTimestampMsec = 14;
+    optional LibraryVoucher libraryVoucher = 15;
+    optional Docid bundleDocid = 16;
+    optional bool bonus = 17;
+    optional int64 storedValidUntilTimestampMsec = 18;
+}
+
+message Image {
+    optional int32 imageType = 1;
+    optional group Dimension = 2 {
+        optional int32 width = 3;
+        optional int32 height = 4;
+        optional int32 aspectRatio = 18;
+    }
+    optional string imageUrl = 5;
+    optional string altTextLocalized = 6;
+    optional string secureUrl = 7;
+    optional int32 positionInSequence = 8;
+    optional bool supportsFifeUrlOptions = 9;
+    optional group Citation = 10 {
+        optional string titleLocalized = 11;
+        optional string url = 12;
+    }
+    optional int32 durationSeconds = 14;
+    optional string fillColorRgb = 15;
+    optional bool autogen = 16;
+    optional Attribution attribution = 17;
+    optional string backgroundColorRgb = 19;
+    optional ImagePalette palette = 20;
+    optional int32 deviceClass = 21;
+    optional bool supportsFifeMonogramOption = 22;
+}
+message ImagePalette {
+    optional string lightVibrantRgb = 1;
+    optional string vibrantRgb = 2;
+    optional string darkVibrantRgb = 3;
+    optional string lightMutedRgb = 4;
+    optional string mutedRgb = 5;
+    optional string darkMutedRgb = 6;
+}
+message Attribution {
+    optional string sourceTitle = 1;
+    optional string sourceUrl = 2;
+    optional string licenseTitle = 3;
+    optional string licenseUrl = 4;
+}
+
+message CertificateSet {
+    repeated string certificateHash = 1;
+}
+
+message EncodedTargets {
+    optional int32 version = 1;
+    repeated int64 supportedTarget = 2;
+    repeated int64 otherTarget = 3;
+}

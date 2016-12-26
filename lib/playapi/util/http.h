@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <curl/curl.h>
 
 namespace playapi {
@@ -12,7 +13,7 @@ class url_encoded_entity {
 
 public:
 
-    std::map<std::string, std::string> pairs;
+    std::vector<std::pair<std::string, std::string>> pairs;
 
     void add_pair(const std::string& key, const std::string& val);
 

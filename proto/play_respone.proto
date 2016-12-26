@@ -1,0 +1,117 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.response;
+
+import "play_common.proto";
+import "play_download.proto";
+import "play_settings.proto";
+import "play_toc.proto";
+import "play_device_config.proto";
+import "play_search.proto";
+import "play_browse.proto";
+import "play_details.proto";
+
+message ServerCommands {
+    optional bool clearCache = 1;
+    optional string displayErrorMessage = 2;
+    optional string logErrorStacktrace = 3;
+    repeated settings.UserSettingDirtyData userSettingDirtyData = 4;
+}
+
+message PreFetch {
+    optional string url = 1;
+    optional bytes response = 2;
+    optional string etag = 3;
+    optional int64 ttl = 4;
+    optional int64 softTtl = 5;
+}
+
+message AndroidAppNotificationData {
+    optional int32 versionCode = 1;
+    optional string assetId = 2;
+    optional string installReferrer = 3;
+    optional download.InstallDetails installDetails = 4;
+}
+message PurchaseRemovalData {
+    optional bool malicious = 1;
+}
+message UserNotificationData {
+    optional string notificationTitle = 1;
+    optional string notificationText = 2;
+    optional string tickerText = 3;
+    optional string dialogTitle = 4;
+    optional string dialogText = 5;
+}
+message InAppNotificationData {
+    optional string checkoutOrderId = 1;
+    optional string inAppNotificationId = 2;
+}
+message PurchaseDeclinedData {
+    optional int32 reason = 1;
+    optional bool showNotification = 2;
+}
+message LibraryDirtyData {
+    optional int32 backend = 1;
+    optional string libraryId = 2;
+}
+message Notification {
+    optional int32 notificationType = 1;
+    optional int64 timestamp = 3;
+    optional Docid docid = 4;
+    optional string docTitle = 5;
+    optional string userEmail = 6;
+    optional AndroidAppNotificationData appData = 7;
+    optional download.AndroidAppDeliveryData appDeliveryData = 8;
+    optional PurchaseRemovalData purchaseRemovalData = 9;
+    optional UserNotificationData userNotificationData = 10;
+    optional InAppNotificationData inAppNotificationData = 11;
+    optional PurchaseDeclinedData purchaseDeclinedData = 12;
+    optional string notificationId = 13;
+    // TODO: optional LibraryUpdateProto.LibraryUpdate libraryUpdate = 14;
+    optional LibraryDirtyData libraryDirtyData = 15;
+    optional settings.UserSettingDirtyData userSettingDirtyData = 16;
+    optional bool notificationAckRequired = 17;
+}
+
+message ServerMetadata {
+    optional int64 latencyMillis = 1;
+}
+
+message Targets {
+    repeated int64 targetId = 1;
+    optional bytes signature = 2;
+}
+
+message ServerCookie {
+    optional int32 type = 1;
+    optional bytes token = 2;
+}
+message ServerCookies {
+    repeated ServerCookie serverCookie = 1;
+}
+
+message AcceptTosResponse {
+}
+
+message Payload {
+    optional details.DetailsResponse detailsResponse = 2;
+    optional search.SearchResponse searchResponse = 5;
+    optional toc.TocResponse tocResponse = 6;
+    optional browse.BrowseResponse browseResponse = 7;
+    optional details.BulkDetailsResponse bulkDetailsResponse = 19;
+    optional download.DeliveryResponse deliveryResponse = 21;
+    optional AcceptTosResponse acceptTosResponse = 22;
+    optional device_config.UploadDeviceConfigResponse uploadDeviceConfigResponse = 28;
+    optional search.SearchSuggestResponse searchSuggestResponse = 40;
+    optional settings.GetUserSettingsResponse getUserSettingsResponse = 54;
+}
+message ResponseWrapper {
+    optional Payload payload = 1;
+    optional ServerCommands commands = 2;
+    repeated PreFetch preFetch = 3;
+    repeated Notification notification = 4;
+    optional ServerMetadata serverMetadata = 5;
+    optional Targets targets = 6;
+    optional ServerCookies serverCookies = 7;
+    optional bytes serverLogsCookie = 9;
+}

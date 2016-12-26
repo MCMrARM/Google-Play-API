@@ -5,6 +5,7 @@
 #include <playapi/device_info.h>
 #include <playapi/util/config.h>
 #include <playapi/checkin.h>
+#include <playapi/api.h>
 #include <gsf.pb.h>
 #include "config.h"
 
@@ -119,26 +120,83 @@ int main() {
 
     std::string device_path = "devices/default.conf";
 
-    std::ifstream device_conf_file (device_path);
-    config device_conf;
-    device_conf.load(device_conf_file);
-    device.load(device_conf);
-    conf.load_device(device_path, device);
-    device.generate_fields();
-    conf.save_device(device_path, device);
+    {
+        std::ifstream dev_info_file(device_path);
+        config dev_info_conf;
+        dev_info_conf.load(dev_info_file);
+        device.load(dev_info_conf);
+    }
 
-    login_api login (device);
+    device_config dev_state(device_path + ".state");
+    dev_state.load();
+    dev_state.load_device_info_data(device);
+    device.generate_fields();
+    dev_state.set_device_info_data(device);
+    dev_state.save();
+
+    login_api login(device);
+    login.set_checkin_data(dev_state.checkin_data);
     if (conf.user_token.length() <= 0) {
         do_interactive_auth(login);
     } else {
         do_auth_from_config(login);
     }
-    if (device.android_id == 0) {
-        checkin_api checkin (device);
+    if (dev_state.checkin_data.android_id == 0) {
+        checkin_api checkin(device);
         checkin.add_auth(login);
-        checkin.perform();
-        conf.save_device(device_path, device);
+        dev_state.checkin_data = checkin.perform_checkin();
+        dev_state.save();
     }
+
+    api play(device);
+    play.set_auth(login);
+    play.set_checkin_data(dev_state.checkin_data);
+    if (play.toc_cookie.length() == 0 || play.device_config_token.length() == 0) {
+        play.fetch_user_settings();
+        auto toc = play.fetch_toc();
+        if (toc.payload().tocresponse().has_cookie())
+            play.toc_cookie = toc.payload().tocresponse().cookie();
+
+        if (play.fetch_toc().payload().tocresponse().requiresuploaddeviceconfig()) {
+            auto resp = play.upload_device_config();
+            play.device_config_token = resp.payload().uploaddeviceconfigresponse().uploaddeviceconfigtoken();
+
+            toc = play.fetch_toc();
+            assert(!toc.payload().tocresponse().requiresuploaddeviceconfig() &&
+                   toc.payload().tocresponse().has_cookie());
+            play.toc_cookie = toc.payload().tocresponse().cookie();
+            if (toc.payload().tocresponse().has_toscontent() && toc.payload().tocresponse().has_tostoken()) {
+                std::string str;
+                std::cout << "Terms of Service:\n" << toc.payload().tocresponse().toscontent() << " [y/N]: ";
+                std::getline(std::cin, str);
+                if (str[0] != 'Y' && str[0] != 'y') {
+                    std::cout << "You have to accept the Terms of Service!\n";
+                    return 1;
+                }
+                std::cout << "Optional: " << toc.payload().tocresponse().toscheckboxtextmarketingemails() << " [y/N]: ";
+                std::getline(std::cin, str);
+                auto tos = play.accept_tos(toc.payload().tocresponse().tostoken(), str[0] == 'Y' || str[0] == 'y');
+                assert(tos.payload().has_accepttosresponse());
+                dev_state.set_api_data(login.get_email(), play);
+                dev_state.save();
+            }
+        }
+    }
+
+    std::cout << "Please type the name of the app you want to download: ";
+    std::string pkg_name;
+    std::cin >> pkg_name;
+    auto details = play.details(pkg_name).payload().detailsresponse().docv2();
+    if (!details.details().appdetails().has_versioncode()) {
+        std::cout << "No version code found. Did you specify a valid package name?\n";
+        return 1;
+    }
+    if (details.offer(0).checkoutflowrequired()) {
+        // TODO: we should pass a valid library token here - however that requires implementation of the
+        // replicateLibrary API call
+        play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string());
+    }
+    // TODO: free apps 'purchase' flow
 
     curl_global_cleanup();
     google::protobuf::ShutdownProtobufLibrary();

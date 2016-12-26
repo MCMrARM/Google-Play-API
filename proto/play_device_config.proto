@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.device_config;
+
+import "gsf.proto";
+import "play_common.proto";
+
+message MobileSubscriber {
+    optional int64 imsi = 1;
+    optional string spn = 2;
+    optional string gid1 = 3;
+}
+message DataServiceSubscriber {
+    optional MobileSubscriber mobileSubscriber = 1;
+}
+message UploadDeviceConfigRequest {
+    optional gsf.DeviceConfigurationProto deviceConfiguration = 1;
+    optional string manufacturer = 2;
+    optional string gcmRegistrationId = 3;
+    optional DataServiceSubscriber dataServiceSubscriber = 4;
+}
+message UploadDeviceConfigResponse {
+    optional string uploadDeviceConfigToken = 1;
+}

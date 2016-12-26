@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <climits>
 #include <cassert>
+#include <gsf.pb.h>
 #include "util/config.h"
 #include "util/rand.h"
 
@@ -163,12 +164,6 @@ device_info::device_info() {
         config_system_features.push_back({feature, 0});
 }
 
-std::string device_info::get_string_android_id() const {
-    std::stringstream ss;
-    ss << std::hex << android_id;
-    return ss.str();
-}
-
 void device_info::load(config& conf) {
     type = device_type_from_string(conf.get("device_type", device_type_to_string(type)));
     build_fingerprint = conf.get("build.fingerprint", build_fingerprint);
@@ -237,6 +232,7 @@ void device_info::load(config& conf) {
     config_total_ram = conf.get_long("config.total_ram", config_total_ram);
     config_cores = conf.get_int("config.cores", config_cores);
     voice_capable = conf.get_bool("voice_capable", voice_capable);
+    wide_screen = conf.get_bool("wide_screen", wide_screen);
     ota_certs = conf.get_array("ota_certs", ota_certs);
 
     config_keyguard_device_secure = conf.get_bool("config.keyguard_device_secure", config_keyguard_device_secure);
@@ -334,4 +330,39 @@ void device_info::generate_fields() {
     // generate random logging id
     if (random_logging_id == 0)
         random_logging_id = rand::next_int<long long>(1, LLONG_MAX);
+}
+
+void device_info::fill_device_config_proto(proto::gsf::DeviceConfigurationProto& config,
+                                           bool feature_add_gles_version_if_zero) {
+    config.set_touchscreen((int) config_touch_screen);
+    config.set_keyboard((int) config_keyboard);
+    config.set_navigation((int) config_navigation);
+    config.set_screenlayout((int) config_screen_layout);
+    config.set_hashardkeyboard(config_has_hard_keyboard);
+    config.set_hasfivewaynavigation(config_has_five_way_navig);
+    config.set_screendensity(config_screen_density);
+    config.set_glesversion(config_gles_version);
+    for (const auto& e : config_system_shared_libraries)
+        config.add_systemsharedlibrary(e);
+    for (const auto& e : config_system_features)
+        config.add_systemavailablefeature(e.first);
+    for (const auto& e : config_native_platforms)
+        config.add_nativeplatform(e);
+    config.set_screenwidth(config_screen_width);
+    config.set_screenheight(config_screen_height);
+    for (const auto& e : config_system_supported_locales)
+        config.add_systemsupportedlocale(e);
+    for (const auto& e : config_gl_extensions)
+        config.add_glextension(e);
+    config.set_smallestscreenwidthdp(config_smallest_screen_width_dp);
+    config.set_lowramdevice(config_low_ram);
+    config.set_totalmemorybytes(config_total_ram);
+    config.set_maxnumofcpucores(config_cores);
+    for (const auto& e : config_system_features) {
+        proto::gsf::DeviceConfigurationProto::FeatureWithGLVersion* feature = config.add_newsystemavailablefeature();
+        feature->set_name(e.first);
+        if (feature_add_gles_version_if_zero || e.second != 0)
+            feature->set_glesversion(e.second);
+    }
+    config.set_keyguarddevicesecure(config_keyguard_device_secure);
 }

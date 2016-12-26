@@ -4,6 +4,7 @@
 
 #include "util/http.h"
 #include "device_info.h"
+#include "checkin.h"
 
 using namespace playapi;
 
@@ -23,13 +24,13 @@ std::string login_api::perform(const login_request& request) {
         if (email.length() <= 0) {
             ent.add_pair("add_account", "1");
         } else {
-            ent.add_pair("Email", email);
+            ent.add_pair("Email", request.email);
             ent.add_pair("check_email", "1");
         }
     }
-    if (device.android_id != 0) {
-        ent.add_pair("androidId", device.get_string_android_id());
-        req.add_header("device", device.get_string_android_id());
+    if (android_id.length() > 0) {
+        ent.add_pair("androidId", android_id);
+        req.add_header("device", android_id);
     }
 
     ent.add_pair("has_permission", "1");
@@ -68,7 +69,7 @@ std::string login_api::perform(const login_request& request) {
     if (request.via_password || request.is_access_token) {
         if (respValMap.count("Token") <= 0)
             throw std::runtime_error("No Oauth2 token returned");
-        set_token(email, respValMap.at("Token"));
+        set_token(request.email, respValMap.at("Token"));
     }
     if (request.is_access_token) {
         if (respValMap.count("Email") <= 0)
@@ -98,4 +99,9 @@ std::string login_api::fetch_service_auth_cookie(const std::string& service, con
 
     }
     return perform(login_request(service, app, token, false, cert));
+}
+
+void login_api::set_checkin_data(const checkin_result& result) {
+    if (result.android_id != 0)
+        android_id = result.get_string_android_id();
 }

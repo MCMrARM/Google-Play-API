@@ -6,6 +6,7 @@
 namespace playapi {
 
 class device_info;
+struct checkin_result;
 
 class login_api {
 
@@ -38,6 +39,7 @@ private:
     const device_info& device;
 
     std::string email, token;
+    std::string android_id;
 
     std::map<std::pair<std::string, std::string>, std::string> auth_cookies;
 
@@ -60,6 +62,8 @@ public:
 
     std::string fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert);
 
+
+    void set_checkin_data(const checkin_result& result);
 
     bool has_token() const {
         return token.length() > 0;

@@ -1,0 +1,48 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.search;
+
+import "play_common.proto";
+import "play_document.proto";
+import "play_link.proto";
+
+message SearchResponse {
+    optional string originalQuery = 1;
+    optional string suggestedQuery = 2;
+    optional bool aggregateQuery = 3;
+    // unused: repeated Bucket bucket = 4;
+    repeated document.DocV2 doc = 5;
+    repeated RelatedSearch relatedSearch = 6;
+    optional bytes serverLogsCookie = 7;
+    optional bool fullPageReplaced = 8;
+    optional bool containsSnow = 9;
+}
+message RelatedSearch {
+    optional string searchUrl = 1;
+    optional string header = 2;
+    optional int32 backendId = 3;
+    optional int32 docType = 4;
+    optional bool current = 5;
+}
+
+message SearchSuggestResponse {
+    repeated Suggestion suggestion = 1;
+    optional bytes serverLogsCookie = 2;
+}
+message Suggestion {
+    optional int32 type = 1;
+    optional string suggestedQuery = 2;
+    optional NavSuggestion navSuggestion = 3;
+    optional bytes serverLogsCookie = 4;
+    optional Image image = 5;
+    optional string displayText = 6;
+    optional link.Link link = 7;
+    optional document.DocV2 document = 8;
+    optional int32 searchBackend = 9;
+}
+message NavSuggestion {
+    optional string docId = 1;
+    optional bytes imageBlob = 2;
+    optional Image image = 3;
+    optional string description = 4;
+}

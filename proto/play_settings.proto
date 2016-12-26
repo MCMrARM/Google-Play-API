@@ -1,0 +1,66 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.settings;
+
+import "play_document.proto";
+import "play_search.proto";
+
+message UserSettingsConsistencyTokens {
+    message ConsistencyTokenInfo {
+        optional string requestHeader = 1;
+        optional string consistencyToken = 2;
+    }
+    repeated ConsistencyTokenInfo consistencyTokenInfo = 1;
+}
+
+message MarketingSettings {
+    optional bool marketingEmailsOptedIn = 1;
+}
+message PrivacySetting {
+    optional int32 type = 1;
+    optional int32 currentStatus = 2;
+    optional bool enabledByDefault = 3;
+}
+message PrivacySettings {
+    repeated PrivacySetting privacySetting = 1;
+}
+
+message FamilyInfo {
+    optional int32 familyMembershipStatus = 1;
+    optional Family family = 2;
+}
+message Family {
+    repeated FamilyMember member = 1;
+}
+message FamilyMember {
+    optional int32 role = 1;
+    optional document.DocV2 personDocument = 2;
+}
+
+message Onboarding {
+    optional int32 type = 1;
+}
+message Onboardings {
+    repeated Onboarding onboarding = 1;
+}
+
+message UserSettings {
+    optional MarketingSettings marketingSettings = 1;
+    optional PrivacySettings privacySettings = 2;
+    optional FamilyInfo familyInfo = 3;
+    optional Onboardings dismissedOnboardings = 4;
+    // TODO: optional PlayAccountProto.PlayAccountUserPurchaseCache playAccountUserPurchaseCache = 5;
+    // TODO: optional PlayAccountProto.PlayAccountGlobalPurchaseCache playAccountGlobalPurchaseCache = 6;
+}
+message OBSOLETEUserSettings {
+    optional bool tosCheckboxMarketingEmailsOptedIn = 1;
+    repeated PrivacySetting privacySetting = 2;
+}
+message UserSettingDirtyData {
+    optional int32 type = 1;
+    optional UserSettingsConsistencyTokens consistencyTokens = 2;
+}
+message GetUserSettingsResponse {
+    optional UserSettings userSettings = 1;
+    optional UserSettingsConsistencyTokens consistencyTokens = 2;
+}

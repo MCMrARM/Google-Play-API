@@ -1,0 +1,57 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.toc;
+
+import "play_settings.proto";
+
+message CarrierBillingConfig {
+    optional string id = 1;
+    optional string name = 2;
+    optional int32 apiVersion = 3;
+    optional string provisioningUrl = 4;
+    optional string credentialsUrl = 5;
+    optional bool tosRequired = 6;
+    optional bool perTransactionCredentialsRequired = 7;
+    optional bool sendSubscriberIdWithCarrierBillingRequests = 8;
+}
+message BillingConfig {
+    optional CarrierBillingConfig carrierBillingConfig = 1;
+    optional int32 maxIabApiVersion = 2;
+}
+message CorpusMetadata {
+    optional int32 backend = 1;
+    optional string name = 2;
+    optional string landingUrl = 3;
+    optional string libraryName = 4;
+    optional string recsWidgetUrl = 6;
+    optional string shopName = 7;
+}
+message Experiments {
+    repeated string experimentId = 1;
+}
+message SelfUpdateConfig {
+    optional int32 latestClientVersionCode = 1;
+}
+message TocResponse {
+    repeated CorpusMetadata corpus = 1;
+    optional int32 tosVersionDeprecated = 2;
+    optional string tosContent = 3;
+    optional string homeUrl = 4;
+    optional Experiments experiments = 5;
+    optional string tosCheckboxTextMarketingEmails = 6;
+    optional string tosToken = 7;
+    optional settings.OBSOLETEUserSettings userSettings = 8;
+    optional string iconOverrideUrl = 9;
+    optional SelfUpdateConfig selfUpdateConfig = 10;
+    optional bool requiresUploadDeviceConfig = 11;
+    optional BillingConfig billingConfig = 12;
+    optional string recsWidgetUrl = 13;
+    optional string socialHomeUrl = 15;
+    optional bool ageVerificationRequired = 16;
+    optional bool gplusSignupEnabled = 17;
+    optional bool redeemEnabled = 18;
+    optional string helpUrl = 19;
+    optional int32 themeId = 20;
+    optional string entertainmentHomeUrl = 21;
+    optional string cookie = 22;
+}

@@ -1,0 +1,59 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.details;
+
+import "play_common.proto";
+import "play_document.proto";
+import "play_link.proto";
+
+message BulkDetailsRequest {
+    repeated string docid = 1;
+    optional bool includeChildDocs = 2;
+    optional bool includeDetails = 3;
+    optional string sourcePackageName = 4;
+    repeated int32 installedVersionCode = 7;
+}
+message BulkDetailsResponse {
+    repeated BulkDetailsEntry entry = 1;
+}
+message BulkDetailsEntry {
+    optional document.DocV2 doc = 1;
+}
+
+message DetailsResponse {
+    // deprecated optional DocV1 docV1 = 1;
+    optional document.Review userReview = 3;
+    optional document.DocV2 docV2 = 4;
+    optional string footerHtml = 5;
+    optional bytes serverLogsCookie = 6;
+    repeated DiscoveryBadge discoveryBadge = 7;
+    optional bool enableReviews = 8;
+}
+message DiscoveryBadge {
+    optional string title = 1;
+    optional Image image = 2;
+    optional int32 backgroundColor = 3;
+    optional DiscoveryBadgeLink discoveryBadgeLink = 4;
+    optional bytes serverLogsCookie = 5;
+    optional bool isPlusOne = 6;
+    optional float aggregateRating = 7;
+    optional int32 userStarRating = 8;
+    optional string downloadCount = 9;
+    optional string downloadUnits = 10;
+    optional string contentDescription = 11;
+    optional PlayerBadge playerBadge = 12;
+    optional FamilyAgeRangeBadge familyAgeRangeBadge = 13;
+    optional FamilyCategoryBadge familyCategoryBadge = 14;
+}
+message DiscoveryBadgeLink {
+    optional link.Link link = 1;
+    optional string userReviewsUrl = 2;
+    optional string criticReviewsUrl = 3;
+}
+message PlayerBadge {
+    optional Image overlayIcon = 1;
+}
+message FamilyAgeRangeBadge {
+}
+message FamilyCategoryBadge {
+}

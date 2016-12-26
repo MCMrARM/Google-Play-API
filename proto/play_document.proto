@@ -1,0 +1,427 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.document;
+
+import "play_common.proto";
+import "play_containers.proto";
+import "play_filter_rules.proto";
+import "play_link.proto";
+import "play_download.proto";
+
+message DocV2 {
+    optional string docid = 1;
+    optional string backendDocid = 2;
+    optional int32 docType = 3;
+    optional int32 backendId = 4;
+    optional string title = 5;
+    optional string creator = 6;
+    optional string descriptionHtml = 7;
+    repeated Offer offer = 8;
+    optional filter_rules.Availability availability = 9;
+    repeated Image image = 10;
+    repeated DocV2 child = 11;
+    optional containers.ContainerMetadata containerMetadata = 12;
+    optional DocumentDetails details = 13;
+    optional AggregateRating aggregateRating = 14;
+    optional Annotations annotations = 15;
+    optional string detailsUrl = 16;
+    optional string shareUrl = 17;
+    optional string reviewsUrl = 18;
+    optional string backendUrl = 19;
+    optional string purchaseDetailsUrl = 20;
+    optional bool detailsReusable = 21;
+    optional string subtitle = 22;
+    optional string translatedDescriptionHtml = 23;
+    optional bytes serverLogsCookie = 24;
+    optional ProductDetails productDetails = 25;
+    optional bool mature = 26;
+    optional string promotionalDescription = 27;
+    optional bool availableForPreregistration = 29;
+    repeated ReviewTip tip = 30;
+    optional string snippetsUrl = 31;
+    optional bool forceShareability = 32;
+    optional bool useWishlistAsPrimaryAction = 33;
+}
+
+message Annotations {
+    optional SectionMetadata sectionRelated = 1;
+    optional SectionMetadata sectionMoreBy = 2;
+    optional PlusOneData plusOneData = 3;
+    repeated Warning warning = 4;
+    optional SectionMetadata sectionBodyOfWork = 5;
+    optional SectionMetadata sectionCoreContent = 6;
+    // TODO: optional Template template = 7;
+    repeated Badge badgeForCreator = 8;
+    repeated Badge badgeForDoc = 9;
+    optional link.Link link = 10;
+    optional SectionMetadata sectionCrossSell = 11;
+    optional SectionMetadata sectionRelatedDocType = 12;
+    repeated PromotedDoc promotedDoc = 13;
+    optional string offerNote = 14;
+    repeated DocV2 subscription = 16;
+    optional OBSOLETE_Reason OBSOLETEReason = 17;
+    optional string privacyPolicyUrl = 18;
+    // TODO: optional SuggestionReasons suggestionReasons = 19;
+    optional Warning optimalDeviceClassWarning = 20;
+    repeated BadgeContainer docBadgeContainer = 21;
+    optional SectionMetadata sectionSuggestForRating = 22;
+    optional SectionMetadata sectionPurchaseCrossSell = 24;
+    repeated link.OverflowLink overflowLink = 25;
+    optional DocV2 creatorDoc = 26;
+    optional string attributionHtml = 27;
+    optional PurchaseHistoryDetails purchaseHistoryDetails = 28;
+    optional Badge badgeForContentRating = 29;
+    repeated VoucherInfo voucherInfo = 30;
+    optional SectionMetadata sectionFeaturedApps = 32;
+    optional string applicableVoucherDescription = 33;
+    repeated SectionMetadata detailsPageCluster = 34;
+    optional VideoAnnotations videoAnnotations = 35;
+    optional SectionMetadata sectionPurchaseRelatedTopics = 36;
+    optional MySubscriptionDetails mySubscriptionDetails = 37;
+    optional MyRewardDetails myRewardDetails = 38;
+    repeated Badge featureBadge = 39;
+    optional SelectedChild selectedChild = 40;
+    optional PurchaseDetails purchaseDetails = 41;
+    optional Snippet snippet = 42;
+}
+message PlusOneData {
+    optional bool setByUser = 1;
+    optional int64 total = 2;
+    optional int64 circlesTotal = 3;
+    repeated OBSOLETE_PlusProfile OBSOLETECirclesProfiles = 4;
+    repeated DocV2 circlePerson = 5;
+}
+message OBSOLETE_PlusProfile {
+    optional string displayName = 2;
+    optional string profileImageUrl = 4;
+    optional Image profileImage = 5;
+}
+message SectionMetadata {
+    optional string header = 1;
+    optional string listUrl = 2;
+    optional string browseUrl = 3;
+    optional string descriptionHtml = 4;
+}
+message Warning {
+    optional string localizedMessage = 1;
+    optional bool showIcon = 2;
+}
+message Badge {
+    optional string title = 1;
+    repeated Image image = 2;
+    optional string browseUrl = 3;
+    optional string description = 4;
+    optional string textInTitleSection = 5;
+    optional Image expandedBadgeImage = 6;
+}
+message BadgeContainer {
+    optional string title = 1;
+    repeated Image image = 2;
+    repeated Badge badge = 3;
+}
+message PurchaseDetails {
+    optional int64 legalDocumentBrokerId = 1;
+    optional bool showAgeConfirmationPrompt = 33;
+    optional bool purchaseAuthenticationRequired = 34;
+}
+message PurchaseHistoryDetails {
+    optional int64 purchaseTimestampMsec = 2;
+    optional string purchaseDetailsHtml = 3;
+    optional Offer offer = 5;
+    optional string purchaseStatus = 6;
+    optional string titleBylineHtml = 7;
+    optional bytes clientRefundContext = 8;
+    optional Image purchaseDetailsImage = 9;
+}
+message OBSOLETE_Reason {
+    optional string briefReason = 1;
+    optional string OBSOLETEDetailedReason = 2;
+    optional string uniqueId = 3;
+}
+message VoucherInfo {
+    optional DocV2 doc = 1;
+    repeated Offer offer = 2;
+}
+message VideoAnnotations {
+    optional bool bundle = 1;
+    optional string bundleContentListUrl = 2;
+    optional string extrasContentListUrl = 3;
+    optional string alsoAvailableInListUrl = 4;
+    repeated Docid bundleDocid = 5;
+}
+message MySubscriptionDetails {
+    optional string subscriptionStatusHtml = 1;
+    optional string title = 2;
+    optional string titleBylineHtml = 3;
+    optional string formattedPrice = 4;
+    optional string priceBylineHtml = 5;
+    optional bool cancelSubscription = 6;
+    optional link.Link paymentDeclinedLearnMoreLink = 7;
+    optional bool inTrialPeriod = 8;
+    optional Image titleBylineIcon = 9;
+}
+message MyRewardDetails {
+    optional int64 expirationTimeMillis = 1;
+    optional string expirationDescription = 2;
+    optional string buttonLabel = 3;
+    optional link.Link linkAction = 4;
+}
+message SelectedChild {
+    optional string docid = 1;
+    optional SelectedChild selectedChild = 2;
+}
+message Snippet {
+    optional string snippetHtml = 1;
+}
+
+message ProductDetails {
+    optional string title = 1;
+    repeated ProductDetailsSection section = 2;
+}
+message ProductDetailsSection {
+    optional string title = 1;
+    repeated ProductDetailsDescription description = 3;
+}
+message ProductDetailsDescription {
+    optional Image image = 1;
+    optional string description = 2;
+}
+message PromotedDoc {
+    optional string title = 1;
+    optional string subtitle = 2;
+    repeated Image image = 3;
+    optional string descriptionHtml = 4;
+    optional string detailsUrl = 5;
+}
+
+message DocumentDetails {
+     optional AppDetails appDetails = 1;
+     optional AlbumDetails albumDetails = 2;
+     optional ArtistDetails artistDetails = 3;
+     optional SongDetails songDetails = 4;
+     optional BookDetails bookDetails = 5;
+     optional VideoDetails videoDetails = 6;
+     optional SubscriptionDetails subscriptionDetails = 7;
+     optional MagazineDetails magazineDetails = 8;
+     optional TvShowDetails tvShowDetails = 9;
+     optional TvSeasonDetails tvSeasonDetails = 10;
+     optional TvEpisodeDetails tvEpisodeDetails = 11;
+     optional PersonDetails personDetails = 12;
+     optional TalentDetails talentDetails = 13;
+     optional DeveloperDetails developerDetails = 14;
+     optional BookSeriesDetails bookSeriesDetails = 15;
+}
+
+message AppDetails {
+    optional string developerName = 1;
+    optional int32 majorVersionNumber = 2;
+    optional int32 versionCode = 3;
+    optional string versionString = 4;
+    optional string title = 5;
+    repeated string appCategory = 7;
+    optional int32 contentRating = 8;
+    optional int64 installationSize = 9;
+    repeated string permission = 10;
+    optional string developerEmail = 11;
+    optional string developerWebsite = 12;
+    optional string numDownloads = 13;
+    optional string packageName = 14;
+    optional string recentChangesHtml = 15;
+    optional string uploadDate = 16;
+    repeated download.FileMetadata file = 17;
+    optional string appType = 18;
+    repeated string certificateHash = 19;
+    optional bool variesByAccount = 21;
+    repeated CertificateSet certificateSet = 22;
+    repeated string autoAcquireFreeAppIfHigherVersionAvailableTag = 23;
+    optional bool declaresIab = 24;
+    repeated string splitId = 25;
+    optional bool gamepadRequired = 26;
+    optional bool externallyHosted = 27;
+    optional bool everExternallyHosted = 28;
+    optional string installNotes = 30;
+    optional int32 installLocation = 31;
+    optional int32 targetSdkVersion = 32;
+    optional string preregistrationPromoCode = 33;
+    optional download.InstallDetails installDetails = 34;
+}
+message AlbumDetails {
+    optional string name = 1;
+    optional MusicDetails details = 2;
+    optional ArtistDetails displayArtist = 3;
+}
+message MusicDetails {
+    optional int32 censoring = 1;
+    optional int32 durationSec = 2;
+    optional string originalReleaseDate = 3;
+    optional string label = 4;
+    repeated ArtistDetails artist = 5;
+    repeated string genre = 6;
+    optional string releaseDate = 7;
+    repeated int32 releaseType = 8;
+}
+message ArtistDetails {
+    optional string detailsUrl = 1;
+    optional string name = 2;
+    optional ArtistExternalLinks externalLinks = 3;
+}
+message ArtistExternalLinks {
+    repeated string websiteUrl = 1;
+    optional string googlePlusProfileUrl = 2;
+    optional string youtubeChannelUrl = 3;
+}
+message SongDetails {
+    optional string name = 1;
+    optional MusicDetails details = 2;
+    optional string albumName = 3;
+    optional int32 trackNumber = 4;
+    optional string previewUrl = 5;
+    optional ArtistDetails displayArtist = 6;
+    optional Badge badge = 7;
+}
+message BookDetails {
+    optional string publisher = 4;
+    optional string publicationDate = 5;
+    optional string isbn = 6;
+    optional int32 numberOfPages = 7;
+    optional string aboutTheAuthor = 17;
+    optional int32 bookType = 27;
+    optional string seriesLine = 28;
+    optional string conciseTitle = 29;
+    optional string shortTitle = 30;
+    optional string seriesTitle = 31;
+}
+message VideoDetails {
+    repeated VideoCredit credit = 1;
+    optional string duration = 2;
+    optional string releaseDate = 3;
+    optional string contentRating = 4;
+    optional int64 likes = 5;
+    optional int64 dislikes = 6;
+    repeated string genre = 7;
+    repeated Trailer trailer = 8;
+    repeated VideoRentalTerm rentalTerm = 9;
+    repeated string audioLanguage = 10;
+    repeated string captionLanguage = 11;
+}
+message VideoCredit {
+    optional int32 creditType = 1;
+    optional string credit = 2;
+    repeated string name = 3;
+}
+message Trailer {
+    optional string trailerId = 1;
+    optional string title = 2;
+    optional string thumbnailUrl = 3;
+    optional string watchUrl = 4;
+    optional string duration = 5;
+}
+message VideoRentalTerm {
+    optional int32 offerType = 1;
+    optional string offerAbbreviation = 2;
+    optional string rentalHeader = 3;
+    repeated group Term = 4 {
+        optional string header = 5;
+        optional string body = 6;
+    }
+}
+message SubscriptionDetails {
+    optional int32 subscriptionPeriod = 1;
+}
+message MagazineDetails {
+    optional string parentDetailsUrl = 1;
+    optional string deviceAvailabilityDescriptionHtml = 2;
+    optional string psvDescription = 3;
+    optional string deliveryFrequencyDescription = 4;
+}
+message TvShowDetails {
+    optional int32 seasonCount = 1;
+    optional int32 startYear = 2;
+    optional int32 endYear = 3;
+    optional string broadcaster = 4;
+}
+message TvSeasonDetails {
+    optional string parentDetailsUrl = 1;
+    optional int32 seasonIndex = 2;
+    optional string releaseDate = 3;
+    optional string broadcaster = 4;
+    optional int32 episodeCount = 5;
+    optional int32 expectedEpisodeCount = 6;
+    optional bool inProgress = 7;
+}
+message TvEpisodeDetails {
+    optional string parentDetailsUrl = 1;
+    optional int32 episodeIndex = 2;
+    optional string releaseDate = 3;
+}
+message PersonDetails {
+    optional bool personIsRequester = 1;
+    optional bool isGplusUser = 2;
+}
+message TalentDetails {
+    optional TalentExternalLinks externalLinks = 1;
+    optional int32 primaryRoleId = 2;
+}
+message TalentExternalLinks {
+    repeated link.Link websiteUrl = 1;
+    optional link.Link googlePlusProfileUrl = 2;
+    optional link.Link youtubeChannelUrl = 3;
+}
+message DeveloperDetails {
+    optional string websiteUrl = 1;
+}
+message BookSeriesDetails {
+    optional string publisher = 1;
+    optional string seriesComposition = 2;
+    optional string seriesCardComposition = 3;
+}
+
+message AggregateRating {
+    optional int32 type = 1;
+    optional float starRating = 2;
+    optional int64 ratingsCount = 3;
+    optional int64 oneStarRatings = 4;
+    optional int64 twoStarRatings = 5;
+    optional int64 threeStarRatings = 6;
+    optional int64 fourStarRatings = 7;
+    optional int64 fiveStarRatings = 8;
+    optional int64 thumbsUpCount = 9;
+    optional int64 thumbsDownCount = 10;
+    optional int64 commentCount = 11;
+    optional double bayesianMeanRating = 12;
+    repeated AggregateRatingTip tip = 13;
+}
+message AggregateRatingTip {
+    optional string tipId = 1;
+    optional string text = 2;
+    optional int32 polarity = 3;
+    optional int64 reviewCount = 4;
+    optional string language = 5;
+    repeated string snippetReviewId = 6;
+}
+
+message Review {
+    optional string authorName = 1;
+    optional string url = 2;
+    optional string source = 3;
+    optional string documentVersion = 4;
+    optional int64 timestampMsec = 5;
+    optional int32 starRating = 6;
+    optional string title = 7;
+    optional string comment = 8;
+    optional string commentId = 9;
+    optional string deviceName = 19;
+    optional string replyText = 29;
+    optional int64 replyTimestampMsec = 30;
+    optional OBSOLETE_PlusProfile OBSOLETEPlusProfile = 31;
+    optional DocV2 author = 33;
+    optional Image sentiment = 34;
+    optional int32 helpfulCount = 35;
+    optional int64 thumbsUpCount = 38;
+}
+message ReviewTip {
+    optional string tipUrl = 1;
+    optional string text = 2;
+    optional int32 polarity = 3;
+    optional int64 reviewCount = 4;
+}

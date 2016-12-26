@@ -1,0 +1,44 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.link;
+
+import "play_common.proto";
+
+message Link {
+    optional string uri = 1;
+    optional ResolvedLink resolvedLink = 2;
+    optional int32 uriBackend = 3;
+}
+message OverflowLink {
+    optional string title = 1;
+    optional Link link = 2;
+}
+message DirectPurchase {
+    optional string detailsUrl = 1;
+    optional string purchaseDocid = 2;
+    optional string parentDocid = 3;
+    optional int32 offerType = 4;
+}
+message HelpCenter {
+    optional string contextId = 1;
+}
+message RedeemGiftCard {
+    optional string prefillCode = 1;
+    optional string partnerPayload = 2;
+}
+message ResolvedLink {
+    optional string detailsUrl = 1;
+    optional string browseUrl = 2;
+    optional string searchUrl = 3;
+    optional DirectPurchase directPurchase = 4;
+    optional string homeUrl = 5;
+    optional RedeemGiftCard redeemGiftCard = 6;
+    optional bytes serverLogsCookie = 7;
+    optional Docid docid = 8;
+    optional string wishlistUrl = 9;
+    optional int32 backend = 10;
+    optional string query = 11;
+    optional string myAccountUrl = 12;
+    optional HelpCenter helpCenter = 13;
+    optional string giftUrl = 14;
+}

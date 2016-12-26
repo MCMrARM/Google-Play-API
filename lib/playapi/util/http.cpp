@@ -7,7 +7,7 @@
 using namespace playapi;
 
 void url_encoded_entity::add_pair(const std::string& key, const std::string& val) {
-    pairs[key] = val;
+    pairs.push_back({key, val});
 }
 
 std::string url_encoded_entity::encode(CURL* curl) const {
@@ -144,7 +144,7 @@ http_response http_request::perform() {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_stringstream_write_func);
     CURLcode ret = curl_easy_perform(curl);
 #ifndef NDEBUG
-    printf("http response body: %s", output.str().c_str());
+    printf("http response body: %s\n", output.str().c_str());
 #endif
     return http_response(curl, ret, output.str());
 }

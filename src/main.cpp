@@ -23,7 +23,7 @@ void do_interactive_auth(login_api& login) {
     std::cout << "Please type the selected number and press enter: ";
     std::string method;
     std::getline(std::cin, method);
-    std::cout << "\n";
+    std::cout << std::endl;
     if (method == "1") {
         // via login & password
         do_login_pass_auth:
@@ -126,16 +126,54 @@ static void do_zlib_inflate(z_stream& zs, FILE* file, char* data, size_t len, in
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     curl_global_init(CURL_GLOBAL_ALL);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+    bool no_interactive = false;
+    bool autoaccept_tos = false;
+    std::string cli_email, cli_password, cli_app;
+    std::string cli_app_output;
+    bool cli_save_auth = false;
+
+    std::string device_path = "devices/default.conf";
+
+    for (int i = 1; i < argc; i++) {
+        const char* key = argv[i];
+        if (strcmp(key, "-ni") == 0 || strcmp(key, "--no-interactive") == 0) {
+            no_interactive = true;
+        } else if (strcmp(key, "-u") == 0 || strcmp(key, "--email") == 0) {
+            cli_email = argv[++i];
+        } else if (strcmp(key, "-p") == 0 || strcmp(key, "--password") == 0) {
+            cli_password = argv[++i];
+        } else if (strcmp(key, "-sa") == 0 || strcmp(key, "--save-auth") == 0) {
+            cli_save_auth = true;
+        } else if (strcmp(key, "-a") == 0 || strcmp(key, "--app") == 0) {
+            cli_app = argv[++i];
+        } else if (strcmp(key, "-o") == 0 || strcmp(key, "--output") == 0) {
+            cli_app_output = argv[++i];
+        } else if (strcmp(key, "-d") == 0 || strcmp(key, "--device") == 0) {
+            device_path = argv[++i];
+        } else if (strcmp(key, "-tos") == 0 || strcmp(key, "--accept-tos") == 0) {
+            autoaccept_tos = true;
+        } else {
+            std::cout << "Google Play Downloader tool" << std::endl;
+            std::cout << "-ni  --non-interactive  Disable interactive mode" << std::endl;
+            std::cout << "-u   --email            Email to use for automatic login" << std::endl;
+            std::cout << "-p   --password         Password to use for automatic login" << std::endl;
+            std::cout << "-sa  --save-auth        Save authentication information to file" << std::endl;
+            std::cout << "-tos --accept-tos       Automatically accept ToS if needed" << std::endl;
+            std::cout << "-d   --device           Use the specified device configuration file" << std::endl;
+            std::cout << "-a   --app              Download this app (package name)" << std::endl;
+            std::cout << "-o   --output           Specify the output file name" << std::endl;
+            return 1;
+        }
+    }
+
 
     conf.load();
 
     device_info device;
-
-    std::string device_path = "devices/default.conf";
-
     {
         std::ifstream dev_info_file(device_path);
         config dev_info_conf;
@@ -153,7 +191,17 @@ int main() {
     login_api login(device);
     login.set_checkin_data(dev_state.checkin_data);
     if (conf.user_token.length() <= 0) {
-        do_interactive_auth(login);
+        if (cli_email.length() > 0 && cli_password.length() > 0) {
+            login.perform(cli_email, cli_password);
+            if (cli_save_auth) {
+                conf.user_email = login.get_email();
+                conf.user_token = login.get_token();
+                conf.save();
+            }
+        } else {
+            assert(!no_interactive);
+            do_interactive_auth(login);
+        }
     } else {
         do_auth_from_config(login);
     }
@@ -183,16 +231,22 @@ int main() {
                    toc.payload().tocresponse().has_cookie());
             play.toc_cookie = toc.payload().tocresponse().cookie();
             if (toc.payload().tocresponse().has_toscontent() && toc.payload().tocresponse().has_tostoken()) {
-                std::string str;
-                std::cout << "Terms of Service:\n" << toc.payload().tocresponse().toscontent() << " [y/N]: ";
-                std::getline(std::cin, str);
-                if (str[0] != 'Y' && str[0] != 'y') {
-                    std::cout << "You have to accept the Terms of Service!\n";
-                    return 1;
+                std::cout << "Terms of Service:" << std::endl << toc.payload().tocresponse().toscontent() << " [y/N]: ";
+                bool allow_marketing_emails = false;
+                if (!autoaccept_tos) {
+                    std::string str;
+                    assert(!no_interactive);
+                    std::getline(std::cin, str);
+                    if (str[0] != 'Y' && str[0] != 'y') {
+                        std::cout << "You have to accept the Terms of Service!" << std::endl;
+                        return 1;
+                    }
+                    std::cout << "Optional: " << toc.payload().tocresponse().toscheckboxtextmarketingemails()
+                              << " [y/N]: ";
+                    std::getline(std::cin, str);
+                    allow_marketing_emails = (str[0] == 'Y' || str[0] == 'y');
                 }
-                std::cout << "Optional: " << toc.payload().tocresponse().toscheckboxtextmarketingemails() << " [y/N]: ";
-                std::getline(std::cin, str);
-                auto tos = play.accept_tos(toc.payload().tocresponse().tostoken(), str[0] == 'Y' || str[0] == 'y');
+                auto tos = play.accept_tos(toc.payload().tocresponse().tostoken(), allow_marketing_emails);
                 assert(tos.payload().has_accepttosresponse());
                 dev_state.set_api_data(login.get_email(), play);
                 dev_state.save();
@@ -200,12 +254,17 @@ int main() {
         }
     }
 
-    std::cout << "Please type the name of the app you want to download: ";
     std::string pkg_name;
-    std::cin >> pkg_name;
+    if (cli_app.length() > 0) {
+        pkg_name = cli_app;
+    } else {
+        assert(!no_interactive);
+        std::cout << "Please type the name of the app you want to download: ";
+        std::cin >> pkg_name;
+    }
     auto details = play.details(pkg_name).payload().detailsresponse().docv2();
     if (!details.details().appdetails().has_versioncode()) {
-        std::cout << "No version code found. Did you specify a valid package name?\n";
+        std::cout << "No version code found. Did you specify a valid package name?" << std::endl;
         return 1;
     }
 
@@ -226,8 +285,10 @@ int main() {
         req.set_follow_location(true);
         req.set_timeout(0L);
 
-        FILE* file = fopen(
-                (pkg_name + " " + std::to_string(details.details().appdetails().versioncode()) + ".apk").c_str(), "w");
+        std::string file_name = cli_app_output;
+        if (file_name.length() == 0)
+            file_name = pkg_name + " " + std::to_string(details.details().appdetails().versioncode()) + ".apk";
+        FILE* file = fopen(file_name.c_str(), "w");
         z_stream zs;
         zs.zalloc = Z_NULL;
         zs.zfree = Z_NULL;
@@ -247,7 +308,7 @@ int main() {
                 std::cout.flush();
             }
         });
-        std::cout << "\nStarting download...";
+        std::cout << std::endl << "Starting download...";
         req.perform();
 
         do_zlib_inflate(zs, file, Z_NULL, 0, Z_FINISH);

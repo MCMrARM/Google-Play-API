@@ -49,7 +49,7 @@ void do_interactive_auth(login_api& login) {
         std::string token;
         std::getline(std::cin, token);
         try {
-            login.perform(token);
+            login.perform_with_access_token(token);
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified token: " << err.what() << std::endl << std::endl;
             goto do_token_auth;

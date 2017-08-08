@@ -21,10 +21,11 @@ std::string login_api::perform(const login_request& request) {
         ent.add_pair("Token", request.token);
         if (request.is_access_token)
             ent.add_pair("ACCESS_TOKEN", "1");
-        if (email.length() <= 0) {
-            ent.add_pair("add_account", "1");
-        } else {
+        if (!request.email.empty())
             ent.add_pair("Email", request.email);
+        if (request.is_add_account) {
+            ent.add_pair("add_account", "1");
+        } else if (!request.email.empty()) {
             ent.add_pair("check_email", "1");
         }
     }
@@ -83,12 +84,12 @@ void login_api::perform(const std::string& email, const std::string& password) {
     perform(login_request("ac2dm", "com.google.android.gsf", email, password));
 }
 
-void login_api::perform(const std::string& access_token) {
-    perform(login_request("ac2dm", "com.google.android.gsf", access_token, true));
+void login_api::perform_with_access_token(const std::string& access_token, const std::string& email, bool add_account) {
+    perform(login_request("ac2dm", "com.google.android.gsf", email, access_token, true, add_account));
 }
 
 void login_api::verify() {
-    perform(login_request("ac2dm", "com.google.android.gsf", token, false));
+    perform(login_request("ac2dm", "com.google.android.gsf", std::string(), token, false, false));
 }
 
 std::string login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert) {
@@ -98,7 +99,7 @@ std::string login_api::fetch_service_auth_cookie(const std::string& service, con
         auto& cookie = auth_cookies.at({service, app});
 
     }
-    return perform(login_request(service, app, token, false, cert));
+    return perform(login_request(service, app, email, token, false, false, cert));
 }
 
 void login_api::set_checkin_data(const checkin_result& result) {

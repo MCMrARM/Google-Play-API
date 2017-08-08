@@ -24,16 +24,18 @@ private:
         std::string email, password;
         std::string token;
         bool is_access_token = false;
+        bool is_add_account = false;
         certificate cert = certificate::google;
 
         login_request(const std::string& service, const std::string& app, std::string email, std::string password,
                       certificate cert = certificate::google) : service(service), app(app), via_password(true),
                                                                 email(email), password(password), cert(cert) {}
-        login_request(const std::string& service, const std::string& app, const std::string& token,
-                      bool is_access_token, certificate cert = certificate::google) : service(service), app(app),
-                                                                                      token(token),
-                                                                                      is_access_token(is_access_token),
-                                                                                      cert(cert) {}
+
+        login_request(const std::string& service, const std::string& app, const std::string& email,
+                      const std::string& token, bool is_access_token, bool is_add_account,
+                      certificate cert = certificate::google) : service(service), app(app), email(email), token(token),
+                                                                is_access_token(is_access_token),
+                                                                is_add_account(is_access_token), cert(cert) {}
     };
 
     const device_info& device;
@@ -55,7 +57,8 @@ public:
 
     // this function will perform login using the specified access token
     // this token is NOT the same as the token that you can provide to set_token
-    void perform(const std::string& access_token);
+    void perform_with_access_token(const std::string& access_token, const std::string& email = std::string(),
+                                   bool add_account = false);
 
     void verify();
 

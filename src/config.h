@@ -10,8 +10,13 @@ namespace playapi { struct device_info; class api; }
 struct app_config {
 
     playapi::config config;
+    std::string path;
 
     std::string user_email, user_token;
+
+    app_config(const std::string& path) : path(path) {
+        load();
+    }
 
     void load();
 

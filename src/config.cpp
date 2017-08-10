@@ -7,7 +7,7 @@
 using namespace playapi;
 
 void app_config::load() {
-    std::ifstream s("playdl.conf");
+    std::ifstream s(path);
     config.load(s);
 
     user_email = config.get("user_email");
@@ -18,7 +18,7 @@ void app_config::save() {
     config.set("user_email", user_email);
     config.set("user_token", user_token);
 
-    std::ofstream s("playdl.conf");
+    std::ofstream s(path);
     config.save(s);
 }
 

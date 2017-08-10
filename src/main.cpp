@@ -12,7 +12,7 @@
 
 using namespace playapi;
 
-app_config conf;
+app_config conf ("playdl.conf");
 
 void do_interactive_auth(login_api& login) {
     auth_select_method:
@@ -170,8 +170,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-
-    conf.load();
 
     device_info device;
     {

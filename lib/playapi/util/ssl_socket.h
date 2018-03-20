@@ -16,7 +16,7 @@ private:
 public:
     ssl_socket(playapi::socket& socket);
 
-    ~ssl_socket();
+    ~ssl_socket() override;
 
 
     ssize_t read(void* data, size_t datalen) override;

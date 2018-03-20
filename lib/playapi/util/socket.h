@@ -19,7 +19,7 @@ public:
 
     socket(std::string const& hostname, unsigned short port) { connect(hostname, port); }
 
-    ~socket();
+    ~socket() override;
 
     void connect(struct sockaddr* addr, socklen_t addrlen);
 

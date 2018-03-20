@@ -25,6 +25,8 @@ public:
 
     void connect(std::string const& hostname, unsigned short port);
 
+    int get_fd() const { return fd; }
+
 
     ssize_t read(void* data, size_t datalen) override;
 

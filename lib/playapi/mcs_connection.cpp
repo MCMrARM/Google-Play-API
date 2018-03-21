@@ -18,6 +18,8 @@ std::unique_ptr<google::protobuf::MessageLite> playapi::mcs_message_for_tag(mcs_
     switch (tag) {
         case mcs_proto_tag::login_response:
             return std::unique_ptr<google::protobuf::MessageLite>(new proto::mcs::LoginResponse);
+        case mcs_proto_tag::iq_stanza:
+            return std::unique_ptr<google::protobuf::MessageLite>(new proto::mcs::IqStanza);
         case mcs_proto_tag::stream_error_stanza:
             return std::unique_ptr<google::protobuf::MessageLite>(new proto::mcs::StreamErrorStanza);
         default:

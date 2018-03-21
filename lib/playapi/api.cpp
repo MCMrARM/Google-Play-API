@@ -99,11 +99,12 @@ proto::finsky::response::ResponseWrapper api::upload_device_config(const std::st
     opt.include_device_config_token = true;
 
     proto::finsky::device_config::UploadDeviceConfigRequest req;
-    if (upload_full_config)
+    if (upload_full_config) {
         device.fill_device_config_proto(*req.mutable_deviceconfiguration());
+        req.mutable_dataservicesubscriber();
+    }
     if (gcm_reg_id.length() > 0)
         req.set_gcmregistrationid(gcm_reg_id);
-    req.mutable_dataservicesubscriber();
 #ifndef NDEBUG
     printf("Upload Device Config: %s\n", req.DebugString().c_str());
 #endif

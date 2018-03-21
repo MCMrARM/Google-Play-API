@@ -148,6 +148,7 @@ checkin_result checkin_api::perform_checkin(const checkin_result& last) {
     res.time = resp.timemsec();
     res.android_id = resp.androidid();
     res.security_token = resp.securitytoken();
+    res.version_info = resp.versioninfo();
     res.device_data_version_info = resp.devicedataversioninfo();
     return res;
 }

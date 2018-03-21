@@ -29,6 +29,7 @@ void device_config::load() {
     checkin_data.time = config.get_long("checkin.time", checkin_data.time);
     checkin_data.android_id = (unsigned long long) config.get_long("checkin.android_id", checkin_data.android_id);
     checkin_data.security_token = (unsigned long long) config.get_long("checkin.security_token", checkin_data.security_token);
+    checkin_data.version_info = config.get("checkin.version_info", checkin_data.version_info);
     checkin_data.device_data_version_info = config.get("checkin.device_data_version_info", checkin_data.device_data_version_info);
 }
 
@@ -36,6 +37,7 @@ void device_config::save() {
     config.set_long("checkin.time", checkin_data.time);
     config.set_long("checkin.android_id", checkin_data.android_id);
     config.set_long("checkin.security_token", checkin_data.security_token);
+    config.set("checkin.version_info", checkin_data.version_info);
     config.set("checkin.device_data_version_info", checkin_data.device_data_version_info);
 
     std::ofstream s(path);

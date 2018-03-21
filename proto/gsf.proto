@@ -43,6 +43,7 @@ message AndroidCheckinResponse {
     optional fixed64 securityToken = 8;
     optional bool settingsDiff = 9;
     repeated string deleteSetting = 10;
+    optional string versionInfo = 11;
     optional string deviceDataVersionInfo = 12;
 }
 message GservicesSetting {

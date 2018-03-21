@@ -14,6 +14,7 @@ struct checkin_result {
     long long time = 0; // 0 if never
     unsigned long long android_id = 0;
     unsigned long long security_token = 0;
+    std::string version_info;
     std::string device_data_version_info;
 
     std::string get_string_android_id() const;

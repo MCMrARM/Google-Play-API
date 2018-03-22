@@ -217,16 +217,3 @@ message StreamAck {
 message SelectiveAck {
   repeated string id = 1;
 }
-
-/**
- * TAG: 13
- */
-message BindAccountRequest {
-  message Property {
-    required string key = 1;
-    required string value = 2;
-  }
-  required string domain = 4;
-  required string source_package = 5;
-  repeated Property property = 7;
-}

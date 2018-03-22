@@ -12,6 +12,7 @@ class device_info;
 class mcs_registration_api {
 
 private:
+    friend class mcs_connection;
     device_info& device;
     checkin_result checkin_data;
     int next_token_request_id = 0;

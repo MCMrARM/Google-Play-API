@@ -32,6 +32,8 @@ std::unique_ptr<google::protobuf::MessageLite> mcs_message_for_tag(mcs_proto_tag
 
 class device_info;
 struct checkin_result;
+class login_api;
+class mcs_registration_api;
 
 class mcs_connection {
 
@@ -59,6 +61,8 @@ public:
     void send_message(mcs_proto_tag tag, google::protobuf::MessageLite& message);
 
     void handle_incoming();
+
+    void bind_account(login_api& login, mcs_registration_api& registration_api);
 
 };
 

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <google/protobuf/message_lite.h>
+#include <functional>
+#include <mcs.pb.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "util/ssl_socket.h"
 
@@ -37,6 +38,9 @@ class mcs_registration_api;
 
 class mcs_connection {
 
+public:
+    using data_message_callback = std::function<void (proto::mcs::DataMessageStanza const& message)>;
+
 private:
 
     static const char* const SERVICE_HOSTNAME;
@@ -49,10 +53,13 @@ private:
     std::unique_ptr<google::protobuf::io::CopyingOutputStreamAdaptor> protobuf_stream_out;
     bool handshake_complete = false;
     bool got_server_version = false;
+    data_message_callback msg_callback;
 
 public:
 
     mcs_connection();
+
+    void set_data_message_callback(data_message_callback cb) { msg_callback = cb; }
 
     void connect();
 

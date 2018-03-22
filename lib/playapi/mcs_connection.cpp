@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <google/protobuf/io/coded_stream.h>
-#include <mcs.pb.h>
 #include "util/protobuf_stream_wrapper.h"
 #include "mcs_registration_api.h"
 #include "device_info.h"
@@ -114,6 +113,9 @@ void mcs_connection::handle_incoming() {
 
         if (tag == mcs_proto_tag::heartbeat_ping) {
             send_message(mcs_proto_tag::heartbeat_ack, proto::mcs::HeartbeatAck());
+        } else if (tag == mcs_proto_tag::data_message_stanza) {
+            if (msg_callback)
+                msg_callback(*((proto::mcs::DataMessageStanza*) message.get()));
         }
     }
 }

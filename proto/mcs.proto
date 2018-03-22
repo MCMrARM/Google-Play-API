@@ -90,6 +90,8 @@ message LoginRequest {
   optional AuthService auth_service = 16;
   optional int32 network_type = 17;
   optional int64 status = 18;
+  optional int32 version_info = 19;
+  // unsure? optional int64 bootup_time = 21;
 }
 /**
   * TAG: 3
@@ -214,4 +216,17 @@ message StreamAck {
 */
 message SelectiveAck {
   repeated string id = 1;
+}
+
+/**
+ * TAG: 13
+ */
+message BindAccountRequest {
+  message Property {
+    required string key = 1;
+    required string value = 2;
+  }
+  required string domain = 4;
+  required string source_package = 5;
+  repeated Property property = 7;
 }

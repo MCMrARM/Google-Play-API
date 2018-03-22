@@ -17,7 +17,7 @@ std::string mcs_registration_api::perform_register(registration_request const& r
     req.set_user_agent("Android-GCM/1.5 (" + device.build_product + " " + device.build_id + ")");
     req.add_header("Authorization", "AidLogin " + std::to_string(checkin_data.android_id) + ":" +
             std::to_string(checkin_data.security_token));
-    req.add_header("app", request.app_id);
+    req.add_header("app", request.app_pkg_name);
     req.add_header("gcm_ver", std::to_string(device.build_google_services));
 
     url_encoded_entity body;
@@ -34,7 +34,7 @@ std::string mcs_registration_api::perform_register(registration_request const& r
         body.add_pair("sender", senders.str());
     }
 
-    body.add_pair("app", request.app_id);
+    body.add_pair("app", request.app_pkg_name);
     body.add_pair("device", std::to_string(checkin_data.android_id));
     if (!request.app_cert.empty())
         body.add_pair("cert", request.app_cert);
@@ -54,22 +54,26 @@ std::string mcs_registration_api::perform_register(registration_request const& r
     return resp_body.substr(strlen("token="));
 }
 
-std::string mcs_registration_api::perform_legacy_register(legacy_registration_request const& request) {
+std::string mcs_registration_api::obtain_instance_id_token(instance_id_request const& request) {
     registration_request req;
-    req.app_id = request.app_id;
+    req.app_pkg_name = request.app_pkg_name;
+    req.app_cert = request.app_cert;
     req.app_ver = request.app_ver;
     req.senders.push_back(request.sender);
+    if (!request.gmp_app_id.empty())
+        req.extras["gmp_app_id"] = request.gmp_app_id;
     req.extras["subtype"] = req.extras["X-subtype"] = request.sender;
     req.extras["subscription"] = req.extras["X-subscription"] = request.sender;
     req.extras["appid"] = request.app_id;
-    req.extras["scope"] = "GCM";
-    std::string kid = "|ID|" + std::to_string(next_legacy_register_id++) + "|"; // unsure what is it used for, seems to be just incremented for each request
+    req.extras["scope"] = request.scope;
+    std::string kid = "|ID|" + std::to_string(next_token_request_id++) + "|";
     req.extras["X-kid"] = req.extras["kid"] = kid;
     req.extras["osv"] = std::to_string(device.build_sdk_version);
-    // per app RSA keypair, TODO?
-    // req.extras["pub2"] = "?";
-    // req.extras["sig"] = "?";
-    req.extras["cliv"] = "iid-12221000";
+    if (!request.pubkey.empty())
+        req.extras["pub2"] = request.pubkey;
+    if (!request.sig.empty())
+        req.extras["sig"] = request.sig;
+    req.extras["cliv"] = request.client_id;
     req.extras["gmsv"] = std::to_string(device.build_google_services);
     if (!request.app_ver.empty())
         req.extras["app_ver"] = request.app_ver;

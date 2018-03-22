@@ -9,7 +9,7 @@ namespace playapi {
 
 enum class mcs_proto_tag {
     heartbeat_ping = 0,
-    Heartbeat_ack,
+    heartbeat_ack,
     login_request,
     login_response,
     close,
@@ -58,7 +58,7 @@ public:
 
     void send_login_request(checkin_result const& checkin_info);
 
-    void send_message(mcs_proto_tag tag, google::protobuf::MessageLite& message);
+    void send_message(mcs_proto_tag tag, google::protobuf::MessageLite const& message);
 
     void handle_incoming();
 

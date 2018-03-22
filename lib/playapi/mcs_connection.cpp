@@ -19,6 +19,8 @@ unsigned char mcs_connection::SERVICE_VERSION = 41;
 
 std::unique_ptr<google::protobuf::MessageLite> playapi::mcs_message_for_tag(mcs_proto_tag tag) {
     switch (tag) {
+        case mcs_proto_tag::heartbeat_ping:
+            return std::unique_ptr<google::protobuf::MessageLite>(new proto::mcs::HeartbeatPing);
         case mcs_proto_tag::login_response:
             return std::unique_ptr<google::protobuf::MessageLite>(new proto::mcs::LoginResponse);
         case mcs_proto_tag::iq_stanza:
@@ -69,7 +71,7 @@ void mcs_connection::send_login_request(checkin_result const& checkin_info) {
     protobuf_stream_out->Flush();
 }
 
-void mcs_connection::send_message(mcs_proto_tag tag, google::protobuf::MessageLite& message) {
+void mcs_connection::send_message(mcs_proto_tag tag, google::protobuf::MessageLite const& message) {
     assert(handshake_complete);
     {
         CodedOutputStream coded_output_stream(protobuf_stream_out.get());
@@ -109,6 +111,10 @@ void mcs_connection::handle_incoming() {
             handshake_complete = true;
 
         printf("MCS [tag=%i]\n%s\n\n", (int) tag, ((google::protobuf::Message*) message.get())->DebugString().c_str());
+
+        if (tag == mcs_proto_tag::heartbeat_ping) {
+            send_message(mcs_proto_tag::heartbeat_ack, proto::mcs::HeartbeatAck());
+        }
     }
 }
 

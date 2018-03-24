@@ -5,6 +5,7 @@
 #include <playapi/util/http.h>
 #include <play_respone.pb.h>
 #include <play_settings.pb.h>
+#include <play_contentsync.pb.h>
 #include "experiments.h"
 #include "checkin.h"
 
@@ -81,6 +82,11 @@ public:
              std::vector<std::string> const& patch_formats = std::vector<std::string>(),
              const std::string& cert_hash = std::string(),
              const std::string& self_update_md5_cert_hash = std::string());
+
+    proto::finsky::response::ResponseWrapper content_sync(
+            proto::finsky::contentsync::ContentSyncRequestProto const& req);
+
+    proto::finsky::response::ResponseWrapper ack_notification(std::string const& nid);
 
 
 };

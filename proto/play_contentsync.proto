@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package playapi.proto.finsky.contentsync;
+
+message ContentSyncRequestProto {
+    message InstalledApp {
+        optional string id = 1;
+        optional int32 version = 2;
+        // optional string unknown = 3;
+        // optional int32 unknown = 4;
+        // optional unknown unknown = 5;
+    }
+    optional bool unknownAlwaysTrue = 1;
+    repeated InstalledApp installed = 2;
+    optional bool hasSystemApps = 3;
+    repeated InstalledApp systemApp = 4;
+}

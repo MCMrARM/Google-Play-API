@@ -171,3 +171,20 @@ proto::finsky::response::ResponseWrapper api::delivery(const std::string& app, i
         e.add_pair("dtok", delivery_token);
     return send_request(http_method::GET, "delivery?" + e.encode(), request_options());
 }
+
+proto::finsky::response::ResponseWrapper api::content_sync(
+        proto::finsky::contentsync::ContentSyncRequestProto const& req) {
+    request_options opt;
+    opt.include_device_config_token = true;
+
+#ifndef NDEBUG
+    printf("Content Sync: %s\n", req.DebugString().c_str());
+#endif
+    return send_request(http_method::POST, "apps/contentSync", req.SerializeAsString(), opt);
+}
+
+proto::finsky::response::ResponseWrapper api::ack_notification(std::string const& nid) {
+    url_encoded_entity e;
+    e.add_pair("nid", nid);
+    return send_request(http_method::GET, "ack?" + e.encode(), request_options());
+}

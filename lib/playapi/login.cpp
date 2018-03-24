@@ -8,6 +8,8 @@
 
 using namespace playapi;
 
+std::regex login_api::entry_parse_regex("([^:]*):([^=]*)=(.*)");
+
 std::string login_api::perform(const login_request& request) {
     http_request req("https://android.clients.google.com/auth");
     req.set_user_agent("GoogleAuth/1.4 (" + device.build_product + " " + device.build_id + "); gzip");
@@ -96,8 +98,7 @@ std::string login_api::fetch_service_auth_cookie(const std::string& service, con
     if (token.size() == 0)
         throw std::runtime_error("No user authenticated.");
     if (auth_cookies.count({service, app}) > 0) {
-        auto& cookie = auth_cookies.at({service, app});
-
+        return auth_cookies.at({service, app});
     }
     return perform(login_request(service, app, email, token, false, false, cert));
 }
@@ -105,4 +106,20 @@ std::string login_api::fetch_service_auth_cookie(const std::string& service, con
 void login_api::set_checkin_data(const checkin_result& result) {
     if (result.android_id != 0)
         android_id = result.get_string_android_id();
+}
+
+void login_api::load_auth_cookies(std::vector<std::string> const& v) {
+    for (std::string const& e : v) {
+        std::smatch matches;
+        if (!std::regex_match(e, matches, entry_parse_regex))
+            continue;
+        auth_cookies[{matches[1], matches[2]}] = matches[3];
+    }
+}
+
+std::vector<std::string> login_api::store_auth_cookies() {
+    std::vector<std::string> v;
+    for (auto const& p : auth_cookies)
+        v.push_back(p.first.first + ":" + p.first.second + "=" + p.second);
+    return v;
 }

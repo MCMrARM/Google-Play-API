@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include "util/config.h"
 
 namespace playapi {
 
@@ -17,6 +18,8 @@ public:
     };
 
 private:
+
+    static std::regex entry_parse_regex;
 
     struct login_request {
         std::string service, app;
@@ -84,6 +87,11 @@ public:
         this->email = email;
         this->token = token;
     }
+
+
+    void load_auth_cookies(std::vector<std::string> const& v);
+
+    std::vector<std::string> store_auth_cookies();
 
 };
 

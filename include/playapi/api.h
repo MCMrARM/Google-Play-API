@@ -106,6 +106,16 @@ public:
         toc_cookie = std::move(value);
     }
 
+    struct bulk_details_request {
+        std::string name;
+        int installed_version_code = -1;
+        bool include_details = false;
+
+        bulk_details_request(std::string const& name) : name(name) {}
+    };
+
+    request_task bulk_details(std::vector<bulk_details_request> const& v);
+
 
 };
 

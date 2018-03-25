@@ -217,3 +217,19 @@ api::request_task api::delivery(const std::string& app, int version_code, const 
         e.add_pair("dtok", delivery_token);
     return send_request(http_method::GET, "delivery?" + e.encode(), request_options());
 }
+
+api::request_task api::bulk_details(std::vector<bulk_details_request> const& v) {
+    request_options opt;
+    opt.include_device_config_token = true;
+    opt.content_type = request_content_type::protobuf;
+
+    proto::finsky::details::BulkDetailsRequest req;
+    for (auto const& p : v) {
+        auto e = req.add_entry();
+        e->set_docid(p.name);
+        if (p.installed_version_code != -1)
+            e->set_installedversioncode(p.installed_version_code);
+        e->set_includedetails(p.include_details);
+    }
+    return send_request(http_method::POST, "bulkDetails", req.SerializeAsString(), opt);
+}

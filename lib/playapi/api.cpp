@@ -44,6 +44,8 @@ void api::add_headers(http_request& req, const request_options& options) {
         req.add_header("X-DFE-Device-Config-Token", device_config_token);
     if (options.include_toc_cookie && toc_cookie.length() > 0)
         req.add_header("X-DFE-Cookie", toc_cookie);
+    if (options.is_protobuf_content)
+        req.add_header("Content-Type", "application/x-protobuf");
     experiments.add_headers(req);
 }
 
@@ -187,4 +189,21 @@ proto::finsky::response::ResponseWrapper api::ack_notification(std::string const
     url_encoded_entity e;
     e.add_pair("nid", nid);
     return send_request(http_method::GET, "ack?" + e.encode(), request_options());
+}
+
+proto::finsky::response::ResponseWrapper api::bulk_details(std::vector<bulk_details_request> const& v) {
+    request_options opt;
+    opt.include_device_config_token = true;
+    opt.is_protobuf_content = true;
+
+    proto::finsky::details::BulkDetailsRequest req;
+    for (auto const& p : v) {
+        auto e = req.add_entry();
+        e->set_docid(p.name);
+        if (p.installed_version_code != -1)
+            e->set_installedversioncode(p.installed_version_code);
+        e->set_includedetails(p.include_details);
+    }
+    req.PrintDebugString();
+    return send_request(http_method::POST, "bulkDetails", req.SerializeAsString(), opt);
 }

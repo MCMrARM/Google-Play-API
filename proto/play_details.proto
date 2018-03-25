@@ -7,11 +7,22 @@ import "play_document.proto";
 import "play_link.proto";
 
 message BulkDetailsRequest {
+    message Entry {
+        required string docid = 1;
+        optional int32 installedVersionCode = 2;
+        optional bool includeDetails = 3;
+        // optional int32 unknown4 = 4;
+        // optional ??? unknown7 = 7;
+    }
+    /*
+    deprecated
     repeated string docid = 1;
     optional bool includeChildDocs = 2;
     optional bool includeDetails = 3;
     optional string sourcePackageName = 4;
     repeated int32 installedVersionCode = 7;
+    */
+    repeated Entry entry = 8;
 }
 message BulkDetailsResponse {
     repeated BulkDetailsEntry entry = 1;

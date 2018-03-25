@@ -24,6 +24,7 @@ public:
         bool include_network_type = true;
         bool include_toc_cookie = true;
         bool include_device_config_token = false;
+        bool is_protobuf_content = false;
     };
 
 private:
@@ -87,6 +88,14 @@ public:
             proto::finsky::contentsync::ContentSyncRequestProto const& req);
 
     proto::finsky::response::ResponseWrapper ack_notification(std::string const& nid);
+
+    struct bulk_details_request {
+        std::string name;
+        int installed_version_code = -1;
+        bool include_details = false;
+    };
+
+    proto::finsky::response::ResponseWrapper bulk_details(std::vector<bulk_details_request> const& v);
 
 
 };

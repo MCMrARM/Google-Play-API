@@ -3,7 +3,6 @@ syntax = "proto2";
 package playapi.proto.finsky.device_config;
 
 import "gsf.proto";
-import "play_common.proto";
 
 message MobileSubscriber {
     optional int64 imsi = 1;

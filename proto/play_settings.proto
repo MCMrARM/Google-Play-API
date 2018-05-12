@@ -3,7 +3,6 @@ syntax = "proto2";
 package playapi.proto.finsky.settings;
 
 import "play_document.proto";
-import "play_search.proto";
 
 message UserSettingsConsistencyTokens {
     message ConsistencyTokenInfo {

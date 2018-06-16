@@ -30,11 +30,12 @@ private:
 
     CURL* curl;
     CURLcode curlCode;
+    long statusCode;
     std::string body;
 
 public:
 
-    http_response(CURL* curl, CURLcode curlCode, std::string body);
+    http_response(CURL* curl, CURLcode curlCode, long statusCode, std::string body);
     http_response(http_response&& r);
     ~http_response();
 
@@ -42,7 +43,9 @@ public:
 
     operator bool() const { return curlCode == CURLE_OK; }
 
-    inline const std::string& get_body() { return body; }
+    inline long get_status_code() const { return statusCode; }
+
+    inline const std::string& get_body() const { return body; }
 
 };
 

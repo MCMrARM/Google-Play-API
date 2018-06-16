@@ -10,9 +10,15 @@
 using namespace playapi;
 
 void api::set_auth(login_api& login) {
+    this->login = &login;
     auth_email = login.get_email();
     auth_token = login.fetch_service_auth_cookie("androidmarket", "com.android.vending",
                                                  login_api::certificate::google);
+}
+
+void api::invalidate_token() {
+    auth_token = login->fetch_service_auth_cookie("androidmarket", "com.android.vending",
+                                                  login_api::certificate::google, true);
 }
 
 void api::set_checkin_data(const checkin_result& result) {
@@ -57,6 +63,10 @@ proto::finsky::response::ResponseWrapper api::send_request(http_method method, c
     auto resp = req.perform();
     if (!resp)
         throw std::runtime_error("Failed to send request");
+    if (resp.get_status_code() == 401) {
+        invalidate_token();
+        return send_request(method, path, bin_data, options);
+    }
     proto::finsky::response::ResponseWrapper ret;
     if (!ret.ParseFromString(resp.get_body()))
         throw std::runtime_error("Failed to parse response");

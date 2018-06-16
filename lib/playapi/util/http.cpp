@@ -36,8 +36,8 @@ std::string url_encoded_entity::encode() const {
     return std::move(ret);
 }
 
-http_response::http_response(CURL* curl, CURLcode curlCode, std::string body) : curl(curl), curlCode(curlCode),
-                                                                                body(body) {
+http_response::http_response(CURL* curl, CURLcode curlCode, long statusCode, std::string body) :
+        curl(curl), curlCode(curlCode), statusCode(statusCode), body(std::move(body)) {
     //
 }
 
@@ -162,8 +162,10 @@ http_response http_request::perform() {
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     }
     CURLcode ret = curl_easy_perform(curl);
+    long status;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 #ifndef NDEBUG
     printf("http response body: %s\n", output.str().c_str());
 #endif
-    return http_response(curl, ret, output.str());
+    return http_response(curl, ret, status, output.str());
 }

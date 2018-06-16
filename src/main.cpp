@@ -1,14 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <curl/curl.h>
-#include <playapi/login.h>
-#include <playapi/device_info.h>
-#include <playapi/util/config.h>
-#include <playapi/checkin.h>
-#include <playapi/api.h>
+#include "../include/playapi/login.h"
+#include "../include/playapi/device_info.h"
+#include "../include/playapi/util/config.h"
+#include "../include/playapi/checkin.h"
+#include "../include/playapi/api.h"
 #include <gsf.pb.h>
 #include <zlib.h>
-#include <playapi/file_login_cache.h>
+#include "../include/playapi/file_login_cache.h"
 #include "config.h"
 
 using namespace playapi;

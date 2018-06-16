@@ -1,12 +1,12 @@
-#include "device_info.h"
+#include <playapi/device_info.h>
 
 #include <sstream>
 #include <iomanip>
 #include <climits>
 #include <cassert>
 #include <gsf.pb.h>
-#include "util/config.h"
-#include "util/rand.h"
+#include <playapi/util/config.h>
+#include <playapi/util/rand.h>
 
 using namespace playapi;
 

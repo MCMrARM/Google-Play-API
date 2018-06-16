@@ -1,6 +1,6 @@
 #include <cstring>
 #include <stdexcept>
-#include "base64.h"
+#include <playapi/util/base64.h>
 
 using namespace playapi;
 

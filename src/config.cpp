@@ -1,8 +1,8 @@
 #include "config.h"
 
 #include <fstream>
-#include <playapi/device_info.h>
-#include <playapi/api.h>
+#include "../include/playapi/device_info.h"
+#include "../include/playapi/api.h"
 
 using namespace playapi;
 

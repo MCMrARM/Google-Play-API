@@ -1,5 +1,5 @@
 #include <iostream>
-#include "config.h"
+#include <playapi/util/config.h>
 
 #include <regex>
 

@@ -2,8 +2,8 @@
 
 #include <string>
 #include <map>
-#include <playapi/util/config.h>
-#include <playapi/checkin.h>
+#include "../include/playapi/util/config.h"
+#include "../include/playapi/checkin.h"
 
 namespace playapi { struct device_info; class api; }
 

@@ -1,11 +1,10 @@
 #include <iostream>
 #include <pwd.h>
 #include <cstring>
-#include "login.h"
-
-#include "util/http.h"
-#include "device_info.h"
-#include "checkin.h"
+#include <playapi/login.h>
+#include <playapi/util/http.h>
+#include <playapi/device_info.h>
+#include <playapi/checkin.h>
 
 using namespace playapi;
 

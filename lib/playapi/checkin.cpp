@@ -1,12 +1,12 @@
-#include "checkin.h"
+#include <playapi/checkin.h>
 
 #include <ctime>
 #include <sstream>
 #include <gsf.pb.h>
-#include "device_info.h"
-#include "login.h"
-#include "util/rand.h"
-#include "util/http.h"
+#include <playapi/device_info.h>
+#include <playapi/login.h>
+#include <playapi/util/rand.h>
+#include <playapi/util/http.h>
 
 using namespace playapi;
 

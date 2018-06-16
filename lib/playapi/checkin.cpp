@@ -24,7 +24,7 @@ void checkin_api::add_auth(login_api& login) {
     auth_user user;
     user.email = login.get_email();
     user.auth_cookie = login.fetch_service_auth_cookie("ac2dm", "com.google.android.gsf",
-                                                       login_api::certificate::google);
+                                                       login_api::certificate::google, true);
     assert(user.email.length() > 0 && user.auth_cookie.length() > 0);
     auth.push_back(user);
 }

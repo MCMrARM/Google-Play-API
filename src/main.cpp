@@ -8,6 +8,7 @@
 #include <playapi/api.h>
 #include <gsf.pb.h>
 #include <zlib.h>
+#include <playapi/file_login_cache.h>
 #include "config.h"
 
 using namespace playapi;
@@ -186,7 +187,8 @@ int main(int argc, char* argv[]) {
     dev_state.set_device_info_data(device);
     dev_state.save();
 
-    login_api login(device);
+    file_login_cache cache ("token_cache.conf");
+    login_api login(device, cache);
     login.set_checkin_data(dev_state.checkin_data);
     if (conf.user_token.length() <= 0) {
         if (cli_email.length() > 0 && cli_password.length() > 0) {

@@ -10,7 +10,7 @@ find_package(Protobuf REQUIRED)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS proto/gsf.proto proto/play_common.proto proto/play_document.proto proto/play_respone.proto proto/play_settings.proto proto/play_toc.proto proto/play_download.proto proto/play_filter_rules.proto proto/play_ownership.proto proto/play_containers.proto proto/play_link.proto proto/play_device_config.proto proto/play_search.proto proto/play_browse.proto proto/play_details.proto)
 
 set(LIB_UTIL_SOURCE_FILES lib/playapi/util/http.cpp lib/playapi/util/http.h lib/playapi/util/config.cpp lib/playapi/util/config.h lib/playapi/util/rand.cpp lib/playapi/util/rand.h lib/playapi/util/base64.cpp lib/playapi/util/base64.h)
-set(LIB_SOURCE_FILES lib/playapi/login.cpp lib/playapi/login.h lib/playapi/device_info.cpp lib/playapi/device_info.h lib/playapi/checkin.cpp lib/playapi/checkin.h lib/playapi/api.h lib/playapi/api.cpp lib/playapi/experiments.cpp lib/playapi/experiments.h)
+set(LIB_SOURCE_FILES lib/playapi/login.cpp lib/playapi/login.h lib/playapi/device_info.cpp lib/playapi/device_info.h lib/playapi/checkin.cpp lib/playapi/checkin.h lib/playapi/api.h lib/playapi/api.cpp lib/playapi/experiments.cpp lib/playapi/experiments.h lib/playapi/login_cache.h lib/playapi/file_login_cache.h lib/playapi/file_login_cache.cpp)
 set(SOURCE_FILES src/main.cpp src/config.cpp src/config.h)
 add_library(gplayapi STATIC ${LIB_SOURCE_FILES} ${LIB_UTIL_SOURCE_FILES} ${PROTO_SRCS})
 target_link_libraries(gplayapi ${CURL_LIBRARIES} ${ZLIB_LIBRARIES} ${Protobuf_LIBRARIES})

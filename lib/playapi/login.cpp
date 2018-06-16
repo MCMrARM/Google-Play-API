@@ -1,5 +1,6 @@
 #include <iostream>
 #include <pwd.h>
+#include <cstring>
 #include "login.h"
 
 #include "util/http.h"
@@ -9,6 +10,7 @@
 using namespace playapi;
 
 std::string login_api::perform(const login_request& request) {
+    auto start = std::chrono::system_clock::now();
     http_request req("https://android.clients.google.com/auth");
     req.set_user_agent("GoogleAuth/1.4 (" + device.build_product + " " + device.build_id + "); gzip");
     req.set_method(http_method::POST);
@@ -66,7 +68,17 @@ std::string login_api::perform(const login_request& request) {
         throw std::runtime_error("Login error: " + respValMap.at("Error"));
     if (respValMap.count("Auth") <= 0)
         throw std::runtime_error("No auth cookie field returned");
-    auth_cookies[{request.service, request.app}] = respValMap.at("Auth");
+    auto auth_val = respValMap.at("Auth");
+    auto expires = start;
+    if (respValMap.count("Expires") > 0) {
+        expires += std::chrono::seconds(std::stoi(respValMap.at("Expires")));
+    } else {
+        if (strncmp(auth_val.c_str(), "oauth2:", 7) == 0)
+            expires += std::chrono::hours(1);
+        else
+            expires += std::chrono::hours(24 * 14);
+    }
+    cache.cache(request.service, request.app, auth_val, expires);
     if (request.via_password || request.is_access_token) {
         if (respValMap.count("Token") <= 0)
             throw std::runtime_error("No Oauth2 token returned");
@@ -77,7 +89,7 @@ std::string login_api::perform(const login_request& request) {
             throw std::runtime_error("No Email returned");
         this->email = respValMap.at("Email");
     }
-    return respValMap.at("Auth");
+    return auth_val;
 }
 
 void login_api::perform(const std::string& email, const std::string& password) {
@@ -92,13 +104,13 @@ void login_api::verify() {
     perform(login_request("ac2dm", "com.google.android.gsf", std::string(), token, false, false));
 }
 
-std::string login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert) {
-    if (token.size() == 0)
+std::string login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert,
+                                                 bool force_refresh) {
+    if (token.empty())
         throw std::runtime_error("No user authenticated.");
-    if (auth_cookies.count({service, app}) > 0) {
-        auto& cookie = auth_cookies.at({service, app});
-
-    }
+    auto cookie = cache.get_cached(service, app);
+    if (!cookie.empty() && !force_refresh)
+        return cookie;
     return perform(login_request(service, app, email, token, false, false, cert));
 }
 

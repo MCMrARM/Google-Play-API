@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include "login_cache.h"
 
 namespace playapi {
 
@@ -43,14 +44,13 @@ private:
     std::string email, token;
     std::string android_id;
 
-    std::map<std::pair<std::string, std::string>, std::string> auth_cookies;
+    login_cache& cache;
 
     std::string perform(const login_request& request);
 
 public:
 
-    login_api(const device_info& device) : device(device) {
-        //
+    login_api(const device_info& device, login_cache& cache) : device(device), cache(cache) {
     }
 
     void perform(const std::string& email, const std::string& password);
@@ -63,7 +63,8 @@ public:
     void verify();
 
 
-    std::string fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert);
+    std::string fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert,
+                                          bool force_refresh = false);
 
 
     void set_checkin_data(const checkin_result& result);

@@ -333,7 +333,7 @@ void device_info::generate_fields() {
 }
 
 void device_info::fill_device_config_proto(proto::gsf::DeviceConfigurationProto& config,
-                                           bool feature_add_gles_version_if_zero) {
+                                           bool feature_add_gles_version_if_zero) const {
     config.set_touchscreen((int) config_touch_screen);
     config.set_keyboard((int) config_keyboard);
     config.set_navigation((int) config_navigation);

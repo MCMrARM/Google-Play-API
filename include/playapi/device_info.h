@@ -130,7 +130,7 @@ struct device_info {
     void generate_fields();
 
     void fill_device_config_proto(proto::gsf::DeviceConfigurationProto& proto,
-                                  bool feature_add_gles_version_if_zero = false);
+                                  bool feature_add_gles_version_if_zero = false) const;
 
 };
 

@@ -16,7 +16,7 @@ std::string checkin_result::get_string_android_id() const {
     return ss.str();
 }
 
-checkin_api::checkin_api(device_info& device) : device(device) {
+checkin_api::checkin_api(device_info const& device) : device(device) {
     //
 }
 
@@ -31,8 +31,6 @@ void checkin_api::add_auth(login_api& login) {
 
 checkin_result checkin_api::perform_checkin(const checkin_result& last) {
     assert(auth.size() > 0);
-
-    device.generate_fields();
 
     // build checkin request
     proto::gsf::AndroidCheckinRequest req;

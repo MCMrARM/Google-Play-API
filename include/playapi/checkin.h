@@ -22,7 +22,7 @@ struct checkin_result {
 
 class checkin_api {
 
-    device_info& device;
+    device_info const& device;
 
     struct auth_user {
         std::string email, auth_cookie;
@@ -31,7 +31,7 @@ class checkin_api {
 
 public:
 
-    checkin_api(device_info& device);
+    checkin_api(device_info const& device);
 
     void add_auth(login_api& login);
 

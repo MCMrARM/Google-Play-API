@@ -4,7 +4,9 @@
 #include <map>
 #include <vector>
 #include <functional>
+#include <sstream>
 #include <curl/curl.h>
+#include "http_request_pool.h"
 
 namespace playapi {
 
@@ -77,11 +79,22 @@ private:
     static size_t curl_write_func(void* ptr, size_t size, size_t nmemb, http_request* s);
     static int curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
+    CURL* build(std::stringstream& output, bool copy_body = false);
+
+    struct pool_entry : public http_request_pool::base_entry {
+        std::stringstream output;
+        std::function<void (http_response)> success;
+        std::function<void (std::exception_ptr)> error;
+
+        ~pool_entry() override = default;
+        void done(CURL* curl, CURLcode code) override;
+    };
+
 public:
 
     http_request() {}
 
-    http_request(std::string url) : url(url) {}
+    http_request(std::string url) : url(std::move(url)) {}
 
     void set_url(const std::string& url) { this->url = url; }
 
@@ -108,6 +121,9 @@ public:
     void set_progress_callback(progress_callback callback) { this->callback_progress = callback; }
 
     http_response perform();
+
+    CURL* perform(std::function<void (http_response)> success, std::function<void (std::exception_ptr)> error,
+                  http_request_pool& pool = http_request_pool::default_instance());
 
 };
 

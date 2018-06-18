@@ -1,7 +1,6 @@
 #include <playapi/util/http.h>
 
 #include <cassert>
-#include <sstream>
 #include <zlib.h>
 
 using namespace playapi;
@@ -41,9 +40,11 @@ http_response::http_response(CURL* curl, CURLcode curlCode, long statusCode, std
     //
 }
 
-http_response::http_response(http_response&& r) : curl(r.curl), curlCode(r.curlCode), body(r.body) {
+http_response::http_response(http_response&& r) : curl(r.curl), curlCode(r.curlCode), statusCode(r.statusCode),
+                                                  body(r.body) {
     r.curl = nullptr;
     r.curlCode = CURLE_FAILED_INIT;
+    r.statusCode = 0;
     r.body = std::string();
 }
 
@@ -109,7 +110,7 @@ int http_request::curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow,
     return 0;
 }
 
-http_response http_request::perform() {
+CURL* http_request::build(std::stringstream& output, bool copy_body) {
     CURL* curl = curl_easy_init();
     assert(curl != nullptr);
     assert(url.length() > 0);
@@ -131,7 +132,7 @@ http_response http_request::perform() {
         curl_easy_setopt(curl, CURLOPT_ENCODING, encoding.c_str());
     if (body.length() > 0) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) body.length());
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+        curl_easy_setopt(curl, copy_body ? CURLOPT_COPYPOSTFIELDS : CURLOPT_POSTFIELDS, body.c_str());
     }
     if (headers.size() > 0) {
         struct curl_slist* chunk = NULL;
@@ -148,7 +149,6 @@ http_response http_request::perform() {
 #ifndef NDEBUG
     printf("http request: %s, body = %s\n", url.c_str(), body.c_str());
 #endif
-    std::stringstream output;
     if (callback_output) {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
@@ -161,6 +161,12 @@ http_response http_request::perform() {
         curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     }
+    return curl;
+}
+
+http_response http_request::perform() {
+    std::stringstream output;
+    CURL* curl = build(output);
     CURLcode ret = curl_easy_perform(curl);
     long status;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
@@ -168,4 +174,24 @@ http_response http_request::perform() {
     printf("http response body: %s\n", output.str().c_str());
 #endif
     return http_response(curl, ret, status, output.str());
+}
+
+CURL* http_request::perform(std::function<void(http_response)> success, std::function<void(std::exception_ptr)> error,
+                            http_request_pool& pool) {
+    pool_entry* ei = new pool_entry;
+    ei->success = success;
+    ei->error = error;
+    CURL* curl = build(ei->output, true);
+    curl_easy_setopt(curl, CURLOPT_PRIVATE, ei);
+    pool.add(curl);
+    return curl;
+}
+
+void http_request::pool_entry::done(CURL* curl, CURLcode code) {
+    long status;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+#ifndef NDEBUG
+    printf("http response body: %s\n", output.str().c_str());
+#endif
+    success(http_response(curl, code, status, output.str()));
 }

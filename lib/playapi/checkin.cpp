@@ -29,7 +29,7 @@ void checkin_api::add_auth(login_api& login) {
     auth.push_back(user);
 }
 
-checkin_result checkin_api::perform_checkin(const checkin_result& last) {
+request<checkin_result> checkin_api::perform_checkin(const checkin_result& last) {
     assert(auth.size() > 0);
 
     // build checkin request
@@ -132,20 +132,22 @@ checkin_result checkin_api::perform_checkin(const checkin_result& last) {
     printf("Checkin data: %s\n", req.DebugString().c_str());
 #endif
     http.set_gzip_body(req.SerializeAsString());
-    http_response http_resp = http.perform();
-    if (!http_resp)
-        throw std::runtime_error("Failed to send checkin");
 
-    proto::gsf::AndroidCheckinResponse resp;
-    if (!resp.ParseFromString(http_resp.get_body()))
-        throw std::runtime_error("Failed to parse checkin");
+    return request<checkin_result>(http, [](http_response http_resp) {
+        if (!http_resp)
+            throw std::runtime_error("Failed to send checkin");
+
+        proto::gsf::AndroidCheckinResponse resp;
+        if (!resp.ParseFromString(http_resp.get_body()))
+            throw std::runtime_error("Failed to parse checkin");
 #ifndef NDEBUG
-    printf("Checkin response: %s\n", resp.DebugString().c_str());
+        printf("Checkin response: %s\n", resp.DebugString().c_str());
 #endif
-    checkin_result res;
-    res.time = resp.timemsec();
-    res.android_id = resp.androidid();
-    res.security_token = resp.securitytoken();
-    res.device_data_version_info = resp.devicedataversioninfo();
-    return res;
+        checkin_result res;
+        res.time = resp.timemsec();
+        res.android_id = resp.androidid();
+        res.security_token = resp.securitytoken();
+        res.device_data_version_info = resp.devicedataversioninfo();
+        return res;
+    });
 }

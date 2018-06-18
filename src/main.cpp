@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
     if (dev_state.checkin_data.android_id == 0) {
         checkin_api checkin(device);
         checkin.add_auth(login);
-        dev_state.checkin_data = checkin.perform_checkin();
+        dev_state.checkin_data = checkin.perform_checkin().call();
         dev_state.save();
     }
 

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <gsf.pb.h>
+#include "request.h"
 
 namespace playapi {
 
@@ -37,7 +38,7 @@ public:
 
     void clear_auth() { auth.clear(); }
 
-    checkin_result perform_checkin(const checkin_result& last_checkin = checkin_result());
+    request<checkin_result> perform_checkin(const checkin_result& last_checkin = checkin_result());
 
 };
 

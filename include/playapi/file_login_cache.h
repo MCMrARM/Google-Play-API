@@ -25,18 +25,18 @@ public:
 
     void cache(std::string const& service, std::string const& app, std::string const& token,
                std::chrono::system_clock::time_point expire) override {
-        mutex.lock();
-        auth_cookies[{service, app}] = {token, expire};
-        mutex.unlock();
+        {
+            std::lock_guard<std::mutex> l (mutex);
+            auth_cookies[{service, app}] = {token, expire};
+        }
         save();
     }
 
     std::string get_cached(std::string const& service, std::string const& app) override {
-        mutex.lock();
+        std::lock_guard<std::mutex> l (mutex);
         auto ret = auth_cookies.find({service, app});
         if (ret != auth_cookies.end() && ret->second.second > std::chrono::system_clock::now())
             return ret->second.first;
-        mutex.unlock();
         return std::string();
     }
 

@@ -5,7 +5,7 @@
 using namespace playapi;
 
 void file_login_cache::load() {
-    mutex.lock();
+    std::lock_guard<std::mutex> l (mutex);
     config c;
     {
         std::ifstream fs(path);
@@ -17,11 +17,10 @@ void file_login_cache::load() {
         auto exp = std::chrono::system_clock::time_point(std::chrono::milliseconds(c.get_long(p + "expires")));
         auth_cookies[{c.get(p + "service"), c.get(p + "app")}] = {c.get(p + "token"), exp};
     }
-    mutex.unlock();
 }
 
 void file_login_cache::save() {
-    mutex.lock();
+    std::lock_guard<std::mutex> l (mutex);
     config c;
     int count = 0;
     for (auto const& e : auth_cookies) {
@@ -40,5 +39,4 @@ void file_login_cache::save() {
         std::ofstream fs(path);
         c.save(fs);
     }
-    mutex.unlock();
 }

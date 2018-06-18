@@ -43,10 +43,11 @@ public:
 
     using request_task = task_ptr<proto::finsky::response::ResponseWrapper>;
 
-    std::mutex info_mutex;
+    mutable std::mutex info_mutex;
     std::string device_config_token;
     std::string toc_cookie;
     experiments_list experiments;
+
 
     api(device_info& device, const std::string& url = "https://android.clients.google.com/fdfe/") : device(device),
                                                                                                     url(url) {}
@@ -86,6 +87,18 @@ public:
              std::vector<std::string> const& patch_formats = std::vector<std::string>(),
              const std::string& cert_hash = std::string(),
              const std::string& self_update_md5_cert_hash = std::string());
+
+
+
+    void set_device_config_token(std::string value) {
+        std::lock_guard<std::mutex> l (info_mutex);
+        device_config_token = std::move(value);
+    }
+
+    void set_toc_cookie(std::string value) {
+        std::lock_guard<std::mutex> l (info_mutex);
+        toc_cookie = std::move(value);
+    }
 
 
 };

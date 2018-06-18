@@ -7,6 +7,7 @@
 #include <playapi/login.h>
 #include <playapi/util/rand.h>
 #include <playapi/util/http.h>
+#include <playapi/http_task.h>
 
 using namespace playapi;
 
@@ -29,7 +30,7 @@ void checkin_api::add_auth(login_api& login) {
     auth.push_back(user);
 }
 
-request<checkin_result> checkin_api::perform_checkin(const checkin_result& last) {
+task_ptr<checkin_result> checkin_api::perform_checkin(const checkin_result& last) {
     assert(auth.size() > 0);
 
     // build checkin request
@@ -133,7 +134,7 @@ request<checkin_result> checkin_api::perform_checkin(const checkin_result& last)
 #endif
     http.set_gzip_body(req.SerializeAsString());
 
-    return request<checkin_result>(http, [](http_response http_resp) {
+    return http_task::make(http)->then<checkin_result>([](http_response&& http_resp) {
         if (!http_resp)
             throw std::runtime_error("Failed to send checkin");
 

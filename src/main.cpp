@@ -36,7 +36,7 @@ void do_interactive_auth(login_api& login) {
         std::getline(std::cin, password);
         std::cout << "Authenticating..." << std::endl;
         try {
-            login.perform(email, password);
+            login.perform(email, password)->call();
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified credentials: " << err.what() << std::endl;
             goto do_login_pass_auth;
@@ -50,7 +50,7 @@ void do_interactive_auth(login_api& login) {
         std::string token;
         std::getline(std::cin, token);
         try {
-            login.perform_with_access_token(token);
+            login.perform_with_access_token(token)->call();
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified token: " << err.what() << std::endl << std::endl;
             goto do_token_auth;
@@ -64,7 +64,7 @@ void do_interactive_auth(login_api& login) {
         std::getline(std::cin, token);
         login.set_token("", token);
         try {
-            login.verify();
+            login.verify()->call();
         } catch (std::runtime_error err) {
             std::cout << "Failed to login using the specified token: " << err.what() << std::endl << std::endl;
             goto do_master_token_auth;
@@ -96,7 +96,7 @@ void do_auth_from_config(login_api& login) {
     do_auth:
     login.set_token(conf.user_email, conf.user_token);
     try {
-        login.verify();
+        login.verify()->call();
     } catch (std::runtime_error err) {
         std::cout << "Failed to login using a saved token: " << err.what() << std::endl;
         std::cout << "Would you like to delete it and authenticate again? [y/N]";
@@ -207,13 +207,13 @@ int main(int argc, char* argv[]) {
     }
     if (dev_state.checkin_data.android_id == 0) {
         checkin_api checkin(device);
-        checkin.add_auth(login);
+        checkin.add_auth(login)->call();
         dev_state.checkin_data = checkin.perform_checkin()->call();
         dev_state.save();
     }
 
     api play(device);
-    play.set_auth(login);
+    play.set_auth(login)->call();
     play.set_checkin_data(dev_state.checkin_data);
     dev_state.load_api_data(login.get_email(), play);
     if (play.toc_cookie.length() == 0 || play.device_config_token.length() == 0) {

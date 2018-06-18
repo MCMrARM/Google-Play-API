@@ -8,7 +8,7 @@
 
 using namespace playapi;
 
-std::string login_api::perform(const login_request& request) {
+task_ptr<std::string> login_api::perform(const login_request& request) {
     auto start = std::chrono::system_clock::now();
     http_request req("https://android.clients.google.com/auth");
     req.set_user_agent("GoogleAuth/1.4 (" + device.build_product + " " + device.build_id + "); gzip");
@@ -50,7 +50,13 @@ std::string login_api::perform(const login_request& request) {
     ent.add_pair("system_partition", "1");
     req.set_body(ent);
 
-    http_response resp = req.perform();
+    return http_task::make(req)->then<std::string>([this, request, start](http_response&& res) {
+        return handle_response(res, request, start);
+    });
+}
+
+std::string login_api::handle_response(http_response& resp, login_request const& request,
+                                       std::chrono::system_clock::time_point start) {
     const std::string& body = resp.get_body();
     std::map<std::string, std::string> respValMap;
     for (size_t i = 0; i < body.length();) {
@@ -91,25 +97,28 @@ std::string login_api::perform(const login_request& request) {
     return auth_val;
 }
 
-void login_api::perform(const std::string& email, const std::string& password) {
-    perform(login_request("ac2dm", "com.google.android.gsf", email, password));
+task_ptr<void> login_api::perform(const std::string& email, const std::string& password) {
+    return perform(login_request("ac2dm", "com.google.android.gsf", email, password))->then<void>([](std::string&&){});
 }
 
-void login_api::perform_with_access_token(const std::string& access_token, const std::string& email, bool add_account) {
-    perform(login_request("ac2dm", "com.google.android.gsf", email, access_token, true, add_account));
+task_ptr<void> login_api::perform_with_access_token(const std::string& access_token, const std::string& email,
+                                                    bool add_account) {
+    return perform(login_request("ac2dm", "com.google.android.gsf", email, access_token, true, add_account))->
+            then<void>([](std::string&&){});
 }
 
-void login_api::verify() {
-    perform(login_request("ac2dm", "com.google.android.gsf", std::string(), token, false, false));
+task_ptr<void> login_api::verify() {
+    return perform(login_request("ac2dm", "com.google.android.gsf", std::string(), token, false, false))->
+            then<void>([](std::string&&){});
 }
 
-std::string login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert,
-                                                 bool force_refresh) {
+task_ptr<std::string> login_api::fetch_service_auth_cookie(const std::string& service, const std::string& app,
+                                                           certificate cert, bool force_refresh) {
     if (token.empty())
         throw std::runtime_error("No user authenticated.");
     auto cookie = cache.get_cached(service, app);
     if (!cookie.empty() && !force_refresh)
-        return cookie;
+        return pre_set_task<std::string>::make(cookie);
     return perform(login_request(service, app, email, token, false, false, cert));
 }
 

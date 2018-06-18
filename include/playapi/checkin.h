@@ -28,15 +28,19 @@ class checkin_api {
     struct auth_user {
         std::string email, auth_cookie;
     };
+    std::mutex auth_mutex;
     std::vector<auth_user> auth;
 
 public:
 
     checkin_api(device_info const& device);
 
-    void add_auth(login_api& login);
+    task_ptr<void> add_auth(login_api& login);
 
-    void clear_auth() { auth.clear(); }
+    void clear_auth() {
+        std::lock_guard<std::mutex> l (auth_mutex);
+        auth.clear();
+    }
 
     task_ptr<checkin_result> perform_checkin(const checkin_result& last_checkin = checkin_result());
 

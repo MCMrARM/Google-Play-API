@@ -21,13 +21,15 @@ checkin_api::checkin_api(device_info const& device) : device(device) {
     //
 }
 
-void checkin_api::add_auth(login_api& login) {
-    auth_user user;
-    user.email = login.get_email();
-    user.auth_cookie = login.fetch_service_auth_cookie("ac2dm", "com.google.android.gsf",
-                                                       login_api::certificate::google, true);
-    assert(user.email.length() > 0 && user.auth_cookie.length() > 0);
-    auth.push_back(user);
+task_ptr<void> checkin_api::add_auth(login_api& login) {
+    return login.fetch_service_auth_cookie("ac2dm", "com.google.android.gsf", login_api::certificate::google, true)->
+            then<void>([this, &login](std::string&& token) {
+        auth_user user;
+        user.email = login.get_email();
+        user.auth_cookie = token;
+        assert(user.email.length() > 0 && user.auth_cookie.length() > 0);
+        auth.push_back(user);
+    });
 }
 
 task_ptr<checkin_result> checkin_api::perform_checkin(const checkin_result& last) {
@@ -115,10 +117,12 @@ task_ptr<checkin_result> checkin_api::perform_checkin(const checkin_result& last
         req.set_serialnumber(device.serial_number);
     for (const auto& e : device.ota_certs)
         req.add_otacert(e);
+    auth_mutex.lock();
     for (const auto& user : auth) {
         req.add_accountcookie("[" + user.email + "]");
         req.add_accountcookie(user.auth_cookie);
     }
+    auth_mutex.unlock();
 
     http_request http("https://android.clients.google.com/checkin");
     http.add_header("Content-type", "application/x-protobuffer");

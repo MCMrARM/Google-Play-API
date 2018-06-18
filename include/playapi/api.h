@@ -31,12 +31,13 @@ private:
     login_api* login;
     std::string url;
 
+    std::mutex auth_mutex;
     std::string auth_email, auth_token;
     checkin_result checkin_data;
 
     void add_headers(http_request& req, const request_options& options);
 
-    void invalidate_token();
+    task_ptr<void> invalidate_token();
 
 public:
 
@@ -47,7 +48,7 @@ public:
     api(device_info& device, const std::string& url = "https://android.clients.google.com/fdfe/") : device(device),
                                                                                                     url(url) {}
 
-    void set_auth(login_api& login);
+    task_ptr<void> set_auth(login_api& login);
 
     void set_checkin_data(const checkin_result& result);
 

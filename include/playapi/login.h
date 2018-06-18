@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include "login_cache.h"
+#include "http_task.h"
 
 namespace playapi {
 
@@ -41,30 +42,33 @@ private:
 
     const device_info& device;
 
+    std::mutex mutex;
     std::string email, token;
     std::string android_id;
 
     login_cache& cache;
 
-    std::string perform(const login_request& request);
+    task_ptr<std::string> perform(const login_request& request);
+
+    std::string handle_response(http_response& resp, login_request const& request, std::chrono::system_clock::time_point start);
 
 public:
 
     login_api(const device_info& device, login_cache& cache) : device(device), cache(cache) {
     }
 
-    void perform(const std::string& email, const std::string& password);
+    task_ptr<void> perform(const std::string& email, const std::string& password);
 
     // this function will perform login using the specified access token
     // this token is NOT the same as the token that you can provide to set_token
-    void perform_with_access_token(const std::string& access_token, const std::string& email = std::string(),
-                                   bool add_account = false);
+    task_ptr<void> perform_with_access_token(const std::string& access_token, const std::string& email = std::string(),
+                                              bool add_account = false);
 
-    void verify();
+    task_ptr<void> verify();
 
 
-    std::string fetch_service_auth_cookie(const std::string& service, const std::string& app, certificate cert,
-                                          bool force_refresh = false);
+    task_ptr<std::string> fetch_service_auth_cookie(const std::string& service, const std::string& app,
+                                                    certificate cert, bool force_refresh = false);
 
 
     void set_checkin_data(const checkin_result& result);

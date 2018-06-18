@@ -9,23 +9,33 @@
 
 using namespace playapi;
 
-void api::set_auth(login_api& login) {
+task_ptr<void> api::set_auth(login_api& login) {
+    std::lock_guard<std::mutex> l(auth_mutex);
     this->login = &login;
-    auth_email = login.get_email();
-    auth_token = login.fetch_service_auth_cookie("androidmarket", "com.android.vending",
-                                                 login_api::certificate::google);
+    return login.fetch_service_auth_cookie("androidmarket", "com.android.vending", login_api::certificate::google)->
+            then<void>([this](std::string&& token) {
+        std::lock_guard<std::mutex> l(auth_mutex);
+        auth_email = this->login->get_email();
+        auth_token = token;
+    });
 }
 
-void api::invalidate_token() {
-    auth_token = login->fetch_service_auth_cookie("androidmarket", "com.android.vending",
-                                                  login_api::certificate::google, true);
+task_ptr<void> api::invalidate_token() {
+    return login->fetch_service_auth_cookie("androidmarket", "com.android.vending", login_api::certificate::google, true)->
+            then<void>([this](std::string&& token) {
+        std::lock_guard<std::mutex> l(auth_mutex);
+        auth_email = this->login->get_email();
+        auth_token = token;
+    });
 }
 
 void api::set_checkin_data(const checkin_result& result) {
+    std::lock_guard<std::mutex> l(auth_mutex);
     checkin_data = result;
 }
 
 void api::add_headers(http_request& req, const request_options& options) {
+    std::lock_guard<std::mutex> l(auth_mutex);
     assert(auth_token.length() > 0);
     req.set_user_agent("Android-Finsky/7.3.07.K-all [0] [PR] 139935798 (api=3,versionCode=80730700,sdk=" +
                        std::to_string(device.build_sdk_version) + ",device=" + device.build_device + ",hardware=" +
@@ -64,7 +74,7 @@ proto::finsky::response::ResponseWrapper api::send_request(http_method method, c
     if (!resp)
         throw std::runtime_error("Failed to send request");
     if (resp.get_status_code() == 401) {
-        invalidate_token();
+        invalidate_token()->call();
         return send_request(method, path, bin_data, options);
     }
     proto::finsky::response::ResponseWrapper ret;

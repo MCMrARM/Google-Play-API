@@ -15,6 +15,17 @@ class task;
 template <typename T, typename ...Args>
 using task_ptr = std::shared_ptr<task<T, Args...>>;
 
+template <typename ...Args>
+class task<void, Args...> : public std::enable_shared_from_this<task<void, Args...>> {
+
+public:
+    virtual ~task() {}
+    virtual void call(Args&&... args, std::function<void ()> success,
+                      std::function<void (std::exception_ptr)> error) = 0;
+    virtual void call(Args&&... args) = 0;
+
+};
+
 template <typename T, typename ...Args>
 class task : public std::enable_shared_from_this<task<T, Args...>> {
 
@@ -28,7 +39,7 @@ public:
     task_ptr<T2, Args...> then(task_ptr<T2, T> task);
 
     template <typename T2>
-    task_ptr<T2, Args...> then(std::function<T2 (T&&)> task);
+    task_ptr<T2, Args...> then(std::function<T2 (T)> task);
 
 };
 
@@ -58,6 +69,38 @@ public:
 };
 
 template <typename T, typename ...Args>
+class function_task;
+
+template <typename ...Args>
+class function_task<void, Args...> : public task<void, Args...> {
+
+private:
+    std::function<void (Args&&...)> func;
+
+public:
+    function_task(std::function<void (Args&&...)> func) : func(func) {
+    }
+
+    static task_ptr<void, Args...> make(std::function<void (Args&&...)> func) {
+        return task_ptr<void, Args...>(new function_task(func));
+    }
+
+    void call(Args&&... args, std::function<void ()> success, std::function<void (std::exception_ptr)> error) override {
+        try {
+            func(std::forward<Args...>(args...));
+            success();
+        } catch (std::exception& e) {
+            error(std::current_exception());
+        }
+    }
+
+    void call(Args&&... args) override {
+        return func(std::forward<Args...>(args...));
+    }
+
+};
+
+template <typename T, typename ...Args>
 class function_task : public task<T, Args...> {
 
 private:
@@ -73,7 +116,7 @@ public:
 
     void call(Args&&... args, std::function<void (T&&)> success, std::function<void (std::exception_ptr)> error) override {
         try {
-            func(std::forward<Args...>(args...));
+            success(func(std::forward<Args...>(args...)));
         } catch (std::exception& e) {
             error(std::current_exception());
         }
@@ -81,6 +124,36 @@ public:
 
     T call(Args&&... args) override {
         return func(std::forward<Args...>(args...));
+    }
+
+};
+
+template <typename T, typename T2, typename ...Args>
+class merged_task;
+
+template <typename T, typename ...Args>
+class merged_task<T, void, Args...> : public task<void, Args...> {
+
+private:
+    task_ptr<T, Args...> t1;
+    task_ptr<void, T> t2;
+
+public:
+    merged_task(task_ptr<T, Args...> t1, task_ptr<void, T> t2) : t1(std::move(t1)), t2(std::move(t2)) {
+    }
+
+    void call(Args&&... args, std::function<void ()> success,
+              std::function<void (std::exception_ptr)> error) override {
+        auto t2 = this->t2;
+        t1->call(args..., [t2, success, error](T&& t) {
+            t2->call(std::move(t), success, error);
+        }, [error](std::exception_ptr e) {
+            error(e);
+        });
+    }
+
+    void call(Args&&... args) override {
+        return t2->call(t1->call(args...));
     }
 
 };
@@ -120,7 +193,7 @@ inline task_ptr<T2, Args...> task<T, Args...>::then(task_ptr<T2, T> task) {
 
 template <typename T, typename ...Args>
 template <typename T2>
-inline task_ptr<T2, Args...> task<T, Args...>::then(std::function<T2 (T&&)> task) {
+inline task_ptr<T2, Args...> task<T, Args...>::then(std::function<T2 (T)> task) {
     return this->then(function_task<T2, T>::make(std::move(task)));
 }
 

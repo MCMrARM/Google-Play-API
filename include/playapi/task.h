@@ -24,6 +24,15 @@ public:
                       std::function<void (std::exception_ptr)> error) = 0;
     virtual void call(Args&&... args) = 0;
 
+    template <typename T2>
+    task_ptr<T2, Args...> then(task_ptr<T2> task);
+
+    template <typename T2>
+    task_ptr<T2, Args...> then(std::function<T2 ()> task);
+
+    template <typename T2>
+    task_ptr<T2, Args...> then(std::function<task_ptr<T2> ()> task);
+
 };
 
 template <typename T, typename ...Args>
@@ -40,6 +49,9 @@ public:
 
     template <typename T2>
     task_ptr<T2, Args...> then(std::function<T2 (T)> task);
+
+    template <typename T2>
+    task_ptr<T2, Args...> then(std::function<task_ptr<T2> (T)> task);
 
 };
 
@@ -78,7 +90,7 @@ private:
     std::function<void (Args&&...)> func;
 
 public:
-    function_task(std::function<void (Args&&...)> func) : func(func) {
+    function_task(std::function<void (Args&&...)> func) : func(std::move(func)) {
     }
 
     static task_ptr<void, Args...> make(std::function<void (Args&&...)> func) {
@@ -87,7 +99,7 @@ public:
 
     void call(Args&&... args, std::function<void ()> success, std::function<void (std::exception_ptr)> error) override {
         try {
-            func(std::forward<Args...>(args...));
+            func(std::forward<Args...>(args)...);
             success();
         } catch (std::exception& e) {
             error(std::current_exception());
@@ -95,7 +107,7 @@ public:
     }
 
     void call(Args&&... args) override {
-        return func(std::forward<Args...>(args...));
+        return func(std::forward<Args...>(args)...);
     }
 
 };
@@ -107,7 +119,7 @@ private:
     std::function<T (Args&&...)> func;
 
 public:
-    function_task(std::function<T (Args&&...)> func) : func(func) {
+    function_task(std::function<T (Args&&...)> func) : func(std::move(func)) {
     }
 
     static task_ptr<T, Args...> make(std::function<T (Args&&...)> func) {
@@ -116,14 +128,47 @@ public:
 
     void call(Args&&... args, std::function<void (T&&)> success, std::function<void (std::exception_ptr)> error) override {
         try {
-            success(func(std::forward<Args...>(args...)));
+            success(func(std::forward<Args...>(args)...));
         } catch (std::exception& e) {
             error(std::current_exception());
         }
     }
 
     T call(Args&&... args) override {
-        return func(std::forward<Args...>(args...));
+        return func(std::forward<Args...>(args)...);
+    }
+
+};
+
+template <typename T, typename ...Args>
+class flat_function_task : public task<T, Args...> {
+
+private:
+    std::function<task_ptr<T> (Args&&...)> func;
+
+public:
+    flat_function_task(std::function<task_ptr<T> (Args&&...)> func) : func(std::move(func)) {
+    }
+
+    static task_ptr<T, Args...> make(std::function<task_ptr<T> (Args&&...)> func) {
+        return task_ptr<T, Args...>(new flat_function_task(func));
+    }
+
+    void call(Args&&... args, std::function<void (T&&)> success, std::function<void (std::exception_ptr)> error) override {
+        task_ptr<T> ret;
+        try {
+            ret = func(std::forward<Args...>(args)...);
+            if (!ret)
+                throw std::runtime_error("flat_function_task's function must return a valid pointer");
+        } catch (std::exception& e) {
+            error(std::current_exception());
+            return;
+        }
+        ret->call(success, error);
+    }
+
+    T call(Args&&... args) override {
+        return func(std::forward<Args...>(args)...)->call();
     }
 
 };
@@ -158,6 +203,34 @@ public:
 
 };
 
+template <typename T2, typename ...Args>
+class merged_task<void, T2, Args...> : public task<T2, Args...> {
+
+private:
+    task_ptr<void, Args...> t1;
+    task_ptr<T2> t2;
+
+public:
+    merged_task(task_ptr<void, Args...> t1, task_ptr<T2> t2) : t1(std::move(t1)), t2(std::move(t2)) {
+    }
+
+    void call(Args&&... args, std::function<void (T2&&)> success,
+              std::function<void (std::exception_ptr)> error) override {
+        auto t2 = this->t2;
+        t1->call(args..., [t2, success, error]() {
+            t2->call(success, error);
+        }, [error](std::exception_ptr e) {
+            error(e);
+        });
+    }
+
+    T2 call(Args&&... args) override {
+        t1->call(args...);
+        return t2->call();
+    }
+
+};
+
 template <typename T, typename T2, typename ...Args>
 class merged_task : public task<T2, Args...> {
 
@@ -185,6 +258,24 @@ public:
 
 };
 
+template <typename ...Args>
+template <typename T2>
+inline task_ptr<T2, Args...> task<void, Args...>::then(task_ptr<T2> task) {
+    return task_ptr<T2, Args...>(new merged_task<void, T2, Args...>(this->shared_from_this(), std::move(task)));
+}
+
+template <typename ...Args>
+template <typename T2>
+inline task_ptr<T2, Args...> task<void, Args...>::then(std::function<T2 ()> task) {
+    return this->then(function_task<T2>::make(std::move(task)));
+}
+
+template <typename ...Args>
+template <typename T2>
+inline task_ptr<T2, Args...> task<void, Args...>::then(std::function<task_ptr<T2> ()> task) {
+    return this->then(flat_function_task<T2>::make(std::move(task)));
+}
+
 template <typename T, typename ...Args>
 template <typename T2>
 inline task_ptr<T2, Args...> task<T, Args...>::then(task_ptr<T2, T> task) {
@@ -195,6 +286,12 @@ template <typename T, typename ...Args>
 template <typename T2>
 inline task_ptr<T2, Args...> task<T, Args...>::then(std::function<T2 (T)> task) {
     return this->then(function_task<T2, T>::make(std::move(task)));
+}
+
+template <typename T, typename ...Args>
+template <typename T2>
+inline task_ptr<T2, Args...> task<T, Args...>::then(std::function<task_ptr<T2> (T)> task) {
+    return this->then(flat_function_task<T2, T>::make(std::move(task)));
 }
 
 }

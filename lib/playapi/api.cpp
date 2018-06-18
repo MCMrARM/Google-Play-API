@@ -63,58 +63,58 @@ void api::add_headers(http_request& req, const request_options& options) {
     experiments.add_headers(req);
 }
 
-proto::finsky::response::ResponseWrapper api::send_request(http_method method, const std::string& path,
-                                                           const std::string& bin_data,
-                                                           const request_options& options) {
+api::request_task api::send_request(http_method method, const std::string& path, const std::string& bin_data,
+                                    const request_options& options) {
+    using ret_type = proto::finsky::response::ResponseWrapper;
     http_request req(url + path);
     req.set_method(method);
     add_headers(req, options);
     req.set_body(bin_data);
-    auto resp = req.perform();
-    if (!resp)
-        throw std::runtime_error("Failed to send request");
-    if (resp.get_status_code() == 401) {
-        invalidate_token()->call();
-        return send_request(method, path, bin_data, options);
-    }
-    proto::finsky::response::ResponseWrapper ret;
-    if (!ret.ParseFromString(resp.get_body()))
-        throw std::runtime_error("Failed to parse response");
+    return http_task::make(req)->then<ret_type>([this, method, path, bin_data, options](http_response&& resp) {
+        if (!resp)
+            throw std::runtime_error("Failed to send request");
+        if (resp.get_status_code() == 401) {
+            return invalidate_token()->then<ret_type>([this, method, path, bin_data, options]() {
+                return send_request(method, path, bin_data, options);
+            });
+        }
+        ret_type ret;
+        if (!ret.ParseFromString(resp.get_body()))
+            throw std::runtime_error("Failed to parse response");
 #ifndef NDEBUG
-    printf("api response body = %s\n", ret.DebugString().c_str());
+        printf("api response body = %s\n", ret.DebugString().c_str());
 #endif
-    if (ret.has_targets())
-        experiments.set_targets(ret.targets());
-    return std::move(ret);
+        if (ret.has_targets())
+            experiments.set_targets(ret.targets());
+        return pre_set_task<ret_type>::make(ret);
+    });
 }
 
-proto::finsky::response::ResponseWrapper api::send_request(http_method method, const std::string& path,
-                                                           const request_options& options) {
+api::request_task api::send_request(http_method method, const std::string& path, const request_options& options) {
     return send_request(method, path, std::string(), options);
 }
 
-proto::finsky::response::ResponseWrapper api::send_request(http_method method, const std::string& path,
-                                                           const std::vector<std::pair<std::string, std::string>>& pairs,
-                                                           const request_options& options) {
+api::request_task api::send_request(http_method method, const std::string& path,
+                                    const std::vector<std::pair<std::string, std::string>>& pairs,
+                                    const request_options& options) {
     url_encoded_entity u;
     for (const auto& pair : pairs)
         u.add_pair(pair.first, pair.second);
     return send_request(method, path, u.encode(), options);
 }
 
-proto::finsky::response::ResponseWrapper api::fetch_user_settings() {
+api::request_task api::fetch_user_settings() {
     return send_request(http_method::GET, "userSettings", request_options());
 }
 
-proto::finsky::response::ResponseWrapper api::fetch_toc() {
+api::request_task api::fetch_toc() {
     request_options opt;
     opt.include_device_config_token = true;
     opt.include_toc_cookie = true;
     return send_request(http_method::GET, "toc", opt);
 }
 
-proto::finsky::response::ResponseWrapper api::upload_device_config(const std::string& gcm_reg_id,
-                                                                   bool upload_full_config) {
+api::request_task api::upload_device_config(const std::string& gcm_reg_id, bool upload_full_config) {
     request_options opt;
     opt.include_device_config_token = true;
 
@@ -130,15 +130,14 @@ proto::finsky::response::ResponseWrapper api::upload_device_config(const std::st
     return send_request(http_method::POST, "uploadDeviceConfig", req.SerializeAsString(), opt);
 }
 
-proto::finsky::response::ResponseWrapper api::accept_tos(const std::string& token, bool allow_marketing_emails) {
+api::request_task api::accept_tos(const std::string& token, bool allow_marketing_emails) {
     url_encoded_entity e;
     e.add_pair("toscme", allow_marketing_emails ? "true" : "false");
     e.add_pair("tost", token);
     return send_request(http_method::POST, "acceptTos", e.encode(), request_options());
 }
 
-proto::finsky::response::ResponseWrapper api::get_search_suggestions(std::string q, int backend_id, int icon_size,
-                                                                     bool request_navigational) {
+api::request_task api::get_search_suggestions(std::string q, int backend_id, int icon_size, bool request_navigational) {
     url_encoded_entity e;
     e.add_pair("q", q);
     e.add_pair("c", std::to_string(backend_id));
@@ -149,25 +148,23 @@ proto::finsky::response::ResponseWrapper api::get_search_suggestions(std::string
     return send_request(http_method::GET, "searchSuggest?" + e.encode(), request_options());
 }
 
-proto::finsky::response::ResponseWrapper api::search(const std::string& q, int backend_id) {
+api::request_task api::search(const std::string& q, int backend_id) {
     url_encoded_entity e;
     e.add_pair("c", std::to_string(backend_id));
     e.add_pair("q", q);
     return send_request(http_method::GET, "search?" + e.encode(), request_options());
 }
 
-proto::finsky::response::ResponseWrapper api::details(const std::string& app) {
+api::request_task api::details(const std::string& app) {
     url_encoded_entity e;
     e.add_pair("doc", app);
     return send_request(http_method::GET, "details?" + e.encode(), request_options());
 }
 
-proto::finsky::response::ResponseWrapper api::delivery(const std::string& app, int version_code,
-                                                       const std::string& library_token,
-                                                       const std::string& delivery_token, int previous_version_code,
-                                                       const std::vector<std::string>& patch_formats,
-                                                       const std::string& cert_hash,
-                                                       const std::string& self_update_md5_cert_hash) {
+api::request_task api::delivery(const std::string& app, int version_code, const std::string& library_token,
+                                const std::string& delivery_token, int previous_version_code,
+                                const std::vector<std::string>& patch_formats, const std::string& cert_hash,
+                                const std::string& self_update_md5_cert_hash) {
     url_encoded_entity e;
     e.add_pair("doc", app);
     e.add_pair("ot", "1");

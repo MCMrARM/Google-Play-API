@@ -41,6 +41,8 @@ private:
 
 public:
 
+    using request_task = task_ptr<proto::finsky::response::ResponseWrapper>;
+
     std::string device_config_token;
     std::string toc_cookie;
     experiments_list experiments;
@@ -52,34 +54,32 @@ public:
 
     void set_checkin_data(const checkin_result& result);
 
-    proto::finsky::response::ResponseWrapper
+    request_task
     send_request(http_method method, const std::string& path, const request_options& options);
 
-    proto::finsky::response::ResponseWrapper
+    request_task
     send_request(http_method method, const std::string& path, const std::string& bin_data,
                  const request_options& options);
 
-    proto::finsky::response::ResponseWrapper
+    request_task
     send_request(http_method method, const std::string& path,
                  const std::vector<std::pair<std::string, std::string>>& pairs, const request_options& options);
 
-    proto::finsky::response::ResponseWrapper fetch_user_settings();
+    request_task fetch_user_settings();
 
-    proto::finsky::response::ResponseWrapper fetch_toc();
+    request_task fetch_toc();
 
-    proto::finsky::response::ResponseWrapper
-    upload_device_config(const std::string& gcm_reg_id = "", bool upload_full_config = true);
+    request_task upload_device_config(const std::string& gcm_reg_id = "", bool upload_full_config = true);
 
-    proto::finsky::response::ResponseWrapper accept_tos(const std::string& token, bool allow_marketing_emails = false);
+    request_task accept_tos(const std::string& token, bool allow_marketing_emails = false);
 
-    proto::finsky::response::ResponseWrapper
-    get_search_suggestions(std::string q, int backend_id = 3, int icon_size = 120, bool request_navigational = true);
+    request_task get_search_suggestions(std::string q, int backend_id = 3, int icon_size = 120, bool request_navigational = true);
 
-    proto::finsky::response::ResponseWrapper search(const std::string& q, int backend_id = 3);
+    request_task search(const std::string& q, int backend_id = 3);
 
-    proto::finsky::response::ResponseWrapper details(const std::string& app);
+    request_task details(const std::string& app);
 
-    proto::finsky::response::ResponseWrapper
+    request_task
     delivery(const std::string& app, int version_code, const std::string& library_token,
              const std::string& delivery_token = std::string(), int previous_version_code = -1,
              std::vector<std::string> const& patch_formats = std::vector<std::string>(),

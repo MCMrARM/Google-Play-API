@@ -217,16 +217,16 @@ int main(int argc, char* argv[]) {
     play.set_checkin_data(dev_state.checkin_data);
     dev_state.load_api_data(login.get_email(), play);
     if (play.toc_cookie.length() == 0 || play.device_config_token.length() == 0) {
-        play.fetch_user_settings();
-        auto toc = play.fetch_toc();
+        play.fetch_user_settings()->call();
+        auto toc = play.fetch_toc()->call();
         if (toc.payload().tocresponse().has_cookie())
             play.toc_cookie = toc.payload().tocresponse().cookie();
 
-        if (play.fetch_toc().payload().tocresponse().requiresuploaddeviceconfig()) {
-            auto resp = play.upload_device_config();
+        if (play.fetch_toc()->call().payload().tocresponse().requiresuploaddeviceconfig()) {
+            auto resp = play.upload_device_config()->call();
             play.device_config_token = resp.payload().uploaddeviceconfigresponse().uploaddeviceconfigtoken();
 
-            toc = play.fetch_toc();
+            toc = play.fetch_toc()->call();
             assert(!toc.payload().tocresponse().requiresuploaddeviceconfig() &&
                    toc.payload().tocresponse().has_cookie());
             play.toc_cookie = toc.payload().tocresponse().cookie();
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
                     std::getline(std::cin, str);
                     allow_marketing_emails = (str[0] == 'Y' || str[0] == 'y');
                 }
-                auto tos = play.accept_tos(toc.payload().tocresponse().tostoken(), allow_marketing_emails);
+                auto tos = play.accept_tos(toc.payload().tocresponse().tostoken(), allow_marketing_emails)->call();
                 assert(tos.payload().has_accepttosresponse());
                 dev_state.set_api_data(login.get_email(), play);
                 dev_state.save();
@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Please type the name of the app you want to download: ";
         std::cin >> pkg_name;
     }
-    auto details = play.details(pkg_name).payload().detailsresponse().docv2();
+    auto details = play.details(pkg_name)->call().payload().detailsresponse().docv2();
     if (!details.details().appdetails().has_versioncode()) {
         std::cout << "No version code found. Did you specify a valid package name?" << std::endl;
         return 1;
@@ -273,7 +273,7 @@ int main(int argc, char* argv[]) {
     {
         // TODO: we should pass a valid library token here - however that requires implementation of the
         // replicateLibrary API call
-        auto resp = play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string());
+        auto resp = play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string())->call();
         auto dd = resp.payload().deliveryresponse().appdeliverydata();
         http_request req(dd.gzippeddownloadurl());
         req.set_encoding("gzip,deflate");

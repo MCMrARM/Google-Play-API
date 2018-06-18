@@ -36,6 +36,7 @@ void api::set_checkin_data(const checkin_result& result) {
 
 void api::add_headers(http_request& req, const request_options& options) {
     std::lock_guard<std::mutex> l(auth_mutex);
+    std::lock_guard<std::mutex> l2 (info_mutex);
     assert(auth_token.length() > 0);
     req.set_user_agent("Android-Finsky/7.3.07.K-all [0] [PR] 139935798 (api=3,versionCode=80730700,sdk=" +
                        std::to_string(device.build_sdk_version) + ",device=" + device.build_device + ",hardware=" +
@@ -84,8 +85,10 @@ api::request_task api::send_request(http_method method, const std::string& path,
 #ifndef NDEBUG
         printf("api response body = %s\n", ret.DebugString().c_str());
 #endif
-        if (ret.has_targets())
+        if (ret.has_targets()) {
+            std::lock_guard<std::mutex> lock (info_mutex);
             experiments.set_targets(ret.targets());
+        }
         return pre_set_task<ret_type>::make(ret);
     });
 }

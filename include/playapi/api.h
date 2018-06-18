@@ -43,6 +43,7 @@ public:
 
     using request_task = task_ptr<proto::finsky::response::ResponseWrapper>;
 
+    std::mutex info_mutex;
     std::string device_config_token;
     std::string toc_cookie;
     experiments_list experiments;

@@ -110,6 +110,7 @@ int http_request_pool::curl_timer_func(CURLM* multi, long timeout_ms, void* user
             ((http_request_pool*) handle->data)->handle_socket_action(CURL_SOCKET_TIMEOUT, 0);
         }, timeout_ms, 0);
     }
+    return 0;
 }
 
 void http_request_pool::run() {

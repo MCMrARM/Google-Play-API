@@ -76,7 +76,7 @@ private:
     output_callback callback_output;
 
     static size_t curl_stringstream_write_func(void* ptr, size_t size, size_t nmemb, std::stringstream* s);
-    static size_t curl_write_func(void* ptr, size_t size, size_t nmemb, http_request* s);
+    static size_t curl_write_func(void* ptr, size_t size, size_t nmemb, output_callback* s);
     static int curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
     CURL* build(std::stringstream& output, bool copy_body = false);
@@ -85,6 +85,8 @@ private:
         std::stringstream output;
         std::function<void (http_response)> success;
         std::function<void (std::exception_ptr)> error;
+        progress_callback callback_progress;
+        output_callback callback_output;
 
         ~pool_entry() override = default;
         void done(CURL* curl, CURLcode code) override;

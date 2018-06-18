@@ -101,12 +101,12 @@ size_t http_request::curl_stringstream_write_func(void* ptr, size_t size, size_t
     s->write((char*) ptr, size * nmemb);
     return size * nmemb;
 }
-size_t http_request::curl_write_func(void* ptr, size_t size, size_t nmemb, http_request* s) {
-    return s->callback_output((char*) ptr, size * nmemb);
+size_t http_request::curl_write_func(void* ptr, size_t size, size_t nmemb, output_callback* s) {
+    return (*s)((char*) ptr, size * nmemb);
 }
 int http_request::curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
-    http_request* req = (http_request*) ptr;
-    req->callback_progress(dltotal, dlnow, ultotal, ulnow);
+    progress_callback* req = (progress_callback*) ptr;
+    (*req)(dltotal, dlnow, ultotal, ulnow);
     return 0;
 }
 
@@ -150,7 +150,7 @@ CURL* http_request::build(std::stringstream& output, bool copy_body) {
     printf("http request: %s, body = %s\n", url.c_str(), body.c_str());
 #endif
     if (callback_output) {
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &callback_output);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
     } else {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output);
@@ -158,7 +158,7 @@ CURL* http_request::build(std::stringstream& output, bool copy_body) {
     }
     if (callback_progress) {
         curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
-        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &callback_progress);
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     }
     return curl;
@@ -182,6 +182,17 @@ CURL* http_request::perform(std::function<void(http_response)> success, std::fun
     ei->success = success;
     ei->error = error;
     CURL* curl = build(ei->output, true);
+    if (callback_output) {
+        ei->callback_output = callback_output;
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ei->callback_output);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
+    }
+    if (callback_progress) {
+        ei->callback_progress = callback_progress;
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
+        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &ei->callback_progress);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    }
     curl_easy_setopt(curl, CURLOPT_PRIVATE, ei);
     pool.add(curl);
     return curl;

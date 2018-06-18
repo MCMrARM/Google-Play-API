@@ -23,7 +23,7 @@ private:
 
     CURLM* curlm;
     std::thread thread;
-    uv_loop_t* loop;
+    uv_loop_t loop;
     uv_timer_t timeout_timer;
     uv_async_t notify_handle;
     std::mutex mutex;

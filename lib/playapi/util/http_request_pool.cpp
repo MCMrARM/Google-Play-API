@@ -8,10 +8,10 @@ using namespace playapi;
 http_request_pool::http_request_pool() {
     curlm = curl_multi_init();
 
-    loop = uv_loop_new();
-    uv_timer_init(loop, &timeout_timer);
+    uv_loop_init(&loop);
+    uv_timer_init(&loop, &timeout_timer);
     timeout_timer.data = this;
-    uv_async_init(loop, &notify_handle, [](uv_async_t* handle) {
+    uv_async_init(&loop, &notify_handle, [](uv_async_t* handle) {
         ((http_request_pool*) handle->data)->handle_interrupt();
     });
     notify_handle.data = this;
@@ -24,8 +24,7 @@ http_request_pool::~http_request_pool() {
     mutex.unlock();
     interrupt();
     thread.join();
-    curl_multi_cleanup(curlm);
-    uv_loop_delete(loop);
+    uv_loop_close(&loop);
 }
 
 void http_request_pool::interrupt() {
@@ -35,7 +34,10 @@ void http_request_pool::interrupt() {
 void http_request_pool::handle_interrupt() {
     std::unique_lock<std::mutex> lock(mutex);
     if (stopping) {
-        uv_stop(loop);
+        curl_multi_cleanup(curlm);
+        uv_close((uv_handle_t*) &timeout_timer, [](uv_handle_t*){});
+        uv_close((uv_handle_t*) &notify_handle, [](uv_handle_t*){});
+        uv_stop(&loop);
         return;
     }
     for (CURL* handle : add_queue)
@@ -45,7 +47,7 @@ void http_request_pool::handle_interrupt() {
 }
 
 http_request_pool::socket_data::socket_data(http_request_pool* pool, curl_socket_t s) : pool(pool), socket(s) {
-    uv_poll_init_socket(pool->loop, &poll_handle, s);
+    uv_poll_init_socket(&pool->loop, &poll_handle, s);
     poll_handle.data = this;
 }
 
@@ -118,5 +120,5 @@ void http_request_pool::run() {
     curl_multi_setopt(curlm, CURLMOPT_SOCKETDATA, this);
     curl_multi_setopt(curlm, CURLMOPT_TIMERFUNCTION, curl_timer_func);
     curl_multi_setopt(curlm, CURLMOPT_TIMERDATA, this);
-    uv_run(loop, UV_RUN_DEFAULT);
+    uv_run(&loop, UV_RUN_DEFAULT);
 }

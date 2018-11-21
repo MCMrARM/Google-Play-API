@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
 
         req.set_progress_callback([&req](curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
             if (dltotal > 0) {
-                printf("\rDownloaded %i%% [%li/%li MiB]", (int) (dlnow * 100 / dltotal), dlnow / 1024 / 1024,
+                printf("\rDownloaded %i%% [%lli/%lli MiB]", (int) (dlnow * 100 / dltotal), dlnow / 1024 / 1024,
                        dltotal / 1024 / 1024);
                 std::cout.flush();
             }

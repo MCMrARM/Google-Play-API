@@ -23,6 +23,14 @@ public:
         load();
     }
 
+    void clear() {
+        {
+            std::lock_guard<std::mutex> l (mutex);
+            auth_cookies.clear();
+        }
+        save();
+    }
+
     void cache(std::string const& service, std::string const& app, std::string const& token,
                std::chrono::system_clock::time_point expire) override {
         {

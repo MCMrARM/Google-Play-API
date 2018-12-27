@@ -133,8 +133,8 @@ http_response http_request::perform() {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) body.length());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
     }
+    struct curl_slist* chunk = NULL;
     if (headers.size() > 0) {
-        struct curl_slist* chunk = NULL;
         if (method == http_method::POST)
             chunk = curl_slist_append(chunk, "Expect:");
         for (const auto& header : headers) {
@@ -165,5 +165,9 @@ http_response http_request::perform() {
 #ifndef NDEBUG
     printf("http response body: %s\n", output.str().c_str());
 #endif
+    if (chunk) {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
+        curl_slist_free_all(chunk);
+    }
     return http_response(curl, ret, output.str());
 }

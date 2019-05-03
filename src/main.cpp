@@ -136,6 +136,7 @@ int main(int argc, char* argv[]) {
     bool no_interactive = false;
     bool autoaccept_tos = false;
     std::string cli_email, cli_password, cli_app;
+    int cli_app_version = -1;
     std::string cli_app_output;
     bool cli_save_auth = false;
     bool login_no_verify = false;
@@ -154,6 +155,8 @@ int main(int argc, char* argv[]) {
             cli_save_auth = true;
         } else if (strcmp(key, "-a") == 0 || strcmp(key, "--app") == 0) {
             cli_app = argv[++i];
+        } else if (strcmp(key, "-v") == 0 || strcmp(key, "--app-version") == 0) {
+            cli_app_version = atoi(argv[++i]);
         } else if (strcmp(key, "-o") == 0 || strcmp(key, "--output") == 0) {
             cli_app_output = argv[++i];
         } else if (strcmp(key, "-d") == 0 || strcmp(key, "--device") == 0) {
@@ -171,8 +174,9 @@ int main(int argc, char* argv[]) {
             std::cout << "-tos --accept-tos       Automatically accept ToS if needed" << std::endl;
             std::cout << "-d   --device           Use the specified device configuration file" << std::endl;
             std::cout << "-a   --app              Download this app (package name)" << std::endl;
+            std::cout << "-v   --app-version      Specify the version to download" << std::endl;
             std::cout << "-o   --output           Specify the output file name" << std::endl;
-            std::cout << "-nv  --login-no-verify  Disables login credential verification" << std::endl;
+            std::cout << "-nv  --login-no-verify  Disable login credential verification" << std::endl;
             return 1;
         }
     }
@@ -268,10 +272,14 @@ int main(int argc, char* argv[]) {
         std::cout << "Please type the name of the app you want to download: ";
         std::cin >> pkg_name;
     }
-    auto details = play.details(pkg_name)->call().payload().detailsresponse().docv2();
-    if (!details.details().appdetails().has_versioncode()) {
-        std::cout << "No version code found. Did you specify a valid package name?" << std::endl;
-        return 1;
+    int pkg_version = cli_app_version;
+    if (cli_app_version == -1) {
+        auto details = play.details(pkg_name)->call().payload().detailsresponse().docv2();
+        if (!details.details().appdetails().has_versioncode()) {
+            std::cout << "No version code found. Did you specify a valid package name?" << std::endl;
+            return 1;
+        }
+        pkg_version = details.details().appdetails().versioncode();
     }
 
     // TODO: Free app purchase flow
@@ -279,7 +287,7 @@ int main(int argc, char* argv[]) {
     {
         // TODO: we should pass a valid library token here - however that requires implementation of the
         // replicateLibrary API call
-        auto resp = play.delivery(pkg_name, details.details().appdetails().versioncode(), std::string())->call();
+        auto resp = play.delivery(pkg_name, pkg_version, std::string())->call();
         auto dd = resp.payload().deliveryresponse().appdeliverydata();
         http_request req(dd.gzippeddownloadurl());
         req.set_encoding("gzip,deflate");
@@ -293,7 +301,7 @@ int main(int argc, char* argv[]) {
 
         std::string file_name = cli_app_output;
         if (file_name.length() == 0)
-            file_name = pkg_name + " " + std::to_string(details.details().appdetails().versioncode()) + ".apk";
+            file_name = pkg_name + " " + std::to_string(pkg_version) + ".apk";
         FILE* file = fopen(file_name.c_str(), "w");
         z_stream zs;
         zs.zalloc = Z_NULL;

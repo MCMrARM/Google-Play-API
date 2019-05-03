@@ -289,8 +289,9 @@ int main(int argc, char* argv[]) {
         // replicateLibrary API call
         auto resp = play.delivery(pkg_name, pkg_version, std::string())->call();
         auto dd = resp.payload().deliveryresponse().appdeliverydata();
-        http_request req(dd.gzippeddownloadurl());
-        req.set_encoding("gzip,deflate");
+        http_request req(dd.has_gzippeddownloadurl() ? dd.gzippeddownloadurl() : dd.downloadurl());
+        if (dd.has_gzippeddownloadurl())
+            req.set_encoding("gzip,deflate");
         req.add_header("Accept-Encoding", "identity");
         auto cookie = dd.downloadauthcookie(0);
         req.add_header("Cookie", cookie.name() + "=" + cookie.value());
@@ -307,13 +308,21 @@ int main(int argc, char* argv[]) {
         zs.zalloc = Z_NULL;
         zs.zfree = Z_NULL;
         zs.opaque = Z_NULL;
-        int ret = inflateInit2(&zs, 31);
-        assert(ret == Z_OK);
 
-        req.set_custom_output_func([file, &zs](char* data, size_t size) {
-            do_zlib_inflate(zs, file, data, size, Z_NO_FLUSH);
-            return size;
-        });
+        if (dd.has_gzippeddownloadurl()) {
+            int ret = inflateInit2(&zs, 31);
+            assert(ret == Z_OK);
+
+            req.set_custom_output_func([file, &zs](char* data, size_t size) {
+                do_zlib_inflate(zs, file, data, size, Z_NO_FLUSH);
+                return size;
+            });
+        } else {
+            req.set_custom_output_func([file, &zs](char* data, size_t size) {
+                fwrite(data, sizeof(char), size, file);
+                return size;
+            });
+        }
 
         req.set_progress_callback([&req](curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
             if (dltotal > 0) {
@@ -325,8 +334,10 @@ int main(int argc, char* argv[]) {
         std::cout << std::endl << "Starting download...";
         req.perform();
 
-        do_zlib_inflate(zs, file, Z_NULL, 0, Z_FINISH);
-        inflateEnd(&zs);
+        if (dd.has_gzippeddownloadurl()) {
+            do_zlib_inflate(zs, file, Z_NULL, 0, Z_FINISH);
+            inflateEnd(&zs);
+        }
 
         fclose(file);
     }

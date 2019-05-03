@@ -92,9 +92,11 @@ void do_interactive_auth(login_api& login) {
         goto auth_select_method;
     }
 }
-void do_auth_from_config(login_api& login) {
+void do_auth_from_config(login_api& login, bool login_no_verify) {
     do_auth:
     login.set_token(conf.user_email, conf.user_token);
+    if (login_no_verify)
+        return;
     try {
         login.verify()->call();
     } catch (std::runtime_error err) {
@@ -136,6 +138,7 @@ int main(int argc, char* argv[]) {
     std::string cli_email, cli_password, cli_app;
     std::string cli_app_output;
     bool cli_save_auth = false;
+    bool login_no_verify = false;
 
     std::string device_path = "devices/default.conf";
 
@@ -157,6 +160,8 @@ int main(int argc, char* argv[]) {
             device_path = argv[++i];
         } else if (strcmp(key, "-tos") == 0 || strcmp(key, "--accept-tos") == 0) {
             autoaccept_tos = true;
+        }else if (strcmp(key, "-nv") == 0 || strcmp(key, "--login-no-verify") == 0) {
+            login_no_verify = true;
         } else {
             std::cout << "Google Play Downloader tool" << std::endl;
             std::cout << "-ni  --non-interactive  Disable interactive mode" << std::endl;
@@ -167,6 +172,7 @@ int main(int argc, char* argv[]) {
             std::cout << "-d   --device           Use the specified device configuration file" << std::endl;
             std::cout << "-a   --app              Download this app (package name)" << std::endl;
             std::cout << "-o   --output           Specify the output file name" << std::endl;
+            std::cout << "-nv  --login-no-verify  Disables login credential verification" << std::endl;
             return 1;
         }
     }
@@ -203,7 +209,7 @@ int main(int argc, char* argv[]) {
             do_interactive_auth(login);
         }
     } else {
-        do_auth_from_config(login);
+        do_auth_from_config(login, login_no_verify);
     }
     if (dev_state.checkin_data.android_id == 0) {
         checkin_api checkin(device);

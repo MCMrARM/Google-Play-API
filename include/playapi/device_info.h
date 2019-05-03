@@ -63,7 +63,7 @@ struct device_info {
     std::string build_build_product = "desktop";
     bool build_ota_installed = false;
     std::vector<std::pair<std::string, int>> build_google_packages;
-    std::string build_security_patch;
+    std::string build_security_patch = "2019-01-05";
 
     device_touch_screen config_touch_screen = device_touch_screen::finger;
     device_keyboard config_keyboard = device_keyboard::qwerty;

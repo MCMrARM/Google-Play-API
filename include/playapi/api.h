@@ -35,6 +35,8 @@ private:
     std::string auth_email, auth_token;
     checkin_result checkin_data;
 
+    std::string build_user_agent();
+
     void add_headers(http_request& req, const request_options& options);
 
     task_ptr<void> invalidate_token();

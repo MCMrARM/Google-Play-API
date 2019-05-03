@@ -75,6 +75,7 @@ message DeviceConfigurationProto {
     optional int64 totalMemoryBytes = 20;
     optional int32 maxNumOfCpuCores = 21;
     repeated FeatureWithGLVersion newSystemAvailableFeature = 26;
+    optional int32 screenLayout2 = 27;
     optional bool keyguardDeviceSecure = 28;
 }
 message AndroidBuildProto {

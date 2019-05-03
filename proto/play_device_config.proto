@@ -13,11 +13,25 @@ message MobileSubscriber {
 message DataServiceSubscriber {
     optional MobileSubscriber mobileSubscriber = 1;
 }
+message ShortDescription {
+    // 1 is device admin pkg info
+    optional string brand = 2;
+    optional string fingerprint = 3;
+    optional fixed64 serialHash = 4;
+    optional int32 userCount = 5;
+    optional string manufacturer = 6;
+    optional string securityPatch = 7;
+}
+message AccountInfo {
+    optional string androidIdAndUserHash = 1;
+}
 message UploadDeviceConfigRequest {
     optional gsf.DeviceConfigurationProto deviceConfiguration = 1;
     optional string manufacturer = 2;
     optional string gcmRegistrationId = 3;
     optional DataServiceSubscriber dataServiceSubscriber = 4;
+    optional ShortDescription shortDescription = 6;
+    optional AccountInfo accountInfo = 7;
 }
 message UploadDeviceConfigResponse {
     optional string uploadDeviceConfigToken = 1;

@@ -59,11 +59,11 @@ void api::add_headers(http_request& req, const request_options& options, bool is
         req.add_header("X-DFE-Network-Type", "4");
     req.add_header("X-DFE-Request-Params", "timeoutMs=2500");
     req.add_header("X-DFE-Client-Id", "am-android-google");
-    if (options.include_checkin_consistency_token && checkin_data.device_data_version_info.length() > 0)
+    if (options.include_checkin_consistency_token && !checkin_data.device_data_version_info.empty())
         req.add_header("X-DFE-Device-Checkin-Consistency-Token", checkin_data.device_data_version_info);
-    if (options.include_device_config_token)
+    if (options.include_device_config_token && !device_config_token.empty())
         req.add_header("X-DFE-Device-Config-Token", device_config_token);
-    if (options.include_toc_cookie && toc_cookie.length() > 0)
+    if (options.include_toc_cookie && !toc_cookie.empty())
         req.add_header("X-DFE-Cookie", toc_cookie);
     if (options.is_protobuf_content)
         req.add_header("Content-Type", "application/x-protobuf");

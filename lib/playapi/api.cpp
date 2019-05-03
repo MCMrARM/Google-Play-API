@@ -42,11 +42,11 @@ std::string api::build_user_agent() {
     return ua.str();
 }
 
-void api::add_headers(http_request& req, const request_options& options, bool is_protobuf) {
+void api::add_headers(http_request& req, const request_options& options) {
     assert(auth_token.length() > 0);
     req.set_user_agent(build_user_agent());
     req.add_header("Authorization", "GoogleLogin auth=" + auth_token);
-    if (is_protobuf)
+    if (options.content_type == request_content_type::protobuf)
         req.add_header("Content-Type", "application/x-protobuf");
     std::string locale = device.locale;
     std::replace(locale.begin(), locale.end(), '_', '-');
@@ -75,7 +75,7 @@ proto::finsky::response::ResponseWrapper api::send_request(http_method method, c
                                                            const request_options& options) {
     http_request req(url + path);
     req.set_method(method);
-    add_headers(req, options, !bin_data.empty());
+    add_headers(req, options);
     req.set_body(bin_data);
     auto resp = req.perform();
     if (!resp)
@@ -119,6 +119,7 @@ proto::finsky::response::ResponseWrapper api::fetch_toc() {
 proto::finsky::response::ResponseWrapper api::upload_device_config(const std::string& gcm_reg_id,
                                                                    bool upload_full_config) {
     request_options opt;
+    opt.content_type = request_content_type::protobuf;
     opt.include_device_config_token = true;
 
     proto::finsky::device_config::UploadDeviceConfigRequest req;

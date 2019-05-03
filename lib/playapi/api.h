@@ -18,7 +18,11 @@ class api {
 
 public:
 
+    enum class request_content_type {
+        none, url_encoded, protobuf
+    };
     struct request_options {
+        request_content_type content_type = request_content_type::none;
         bool include_checkin_consistency_token = true;
         bool include_content_filters = true;
         bool include_network_type = true;
@@ -37,7 +41,7 @@ private:
 
     std::string build_user_agent();
 
-    void add_headers(http_request& req, const request_options& options, bool is_protobuf);
+    void add_headers(http_request& req, const request_options& options);
 
 public:
 

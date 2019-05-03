@@ -4,8 +4,9 @@
 #include <algorithm>
 #include <play_respone.pb.h>
 #include <play_device_config.pb.h>
-#include "device_info.h"
-#include "login.h"
+#include <playapi/device_info.h>
+#include <playapi/login.h>
+#include <playapi/util/base64.h>
 
 using namespace playapi;
 
@@ -19,13 +20,31 @@ void api::set_checkin_data(const checkin_result& result) {
     checkin_data = result;
 }
 
+std::string api::build_user_agent() {
+    std::stringstream ua;
+    ua << "Android-Finsky/14.2.63-all [0] [PR] 240807813 (api=3,versionCode=81426300,";
+    ua << "sdk=" << device.build_sdk_version << ",";
+    ua << "device=" << device.build_device << ",";
+    ua << "hardware=" << device.build_product << ",";
+    ua << "product=" << device.build_build_product << ",";
+    ua << "platformVersionRelease=" << device.build_version_string << ",";
+    ua << "buildId=" << device.build_id << ",";
+    ua << "isWideScreen=" << (device.wide_screen ? "1" : "0") << ",";
+    ua << "supportedAbis=";
+    bool first = true;
+    for (auto const& abi : device.config_native_platforms) {
+        if (!first)
+            ua << ";";
+        ua << abi;
+        first = false;
+    }
+    ua << ")";
+    return ua.str();
+}
+
 void api::add_headers(http_request& req, const request_options& options) {
     assert(auth_token.length() > 0);
-    req.set_user_agent("Android-Finsky/7.3.07.K-all [0] [PR] 139935798 (api=3,versionCode=80730700,sdk=" +
-                       std::to_string(device.build_sdk_version) + ",device=" + device.build_device + ",hardware=" +
-                       device.build_product + ",product=" + device.build_build_product + ",platformVersionRelease=" +
-                       device.build_version_string + ",buildId=" + device.build_id + ",isWideScreen=" +
-                       (device.wide_screen ? "1" : "0") + ")");
+    req.set_user_agent(build_user_agent());
     req.add_header("Authorization", "GoogleLogin auth=" + auth_token);
     std::string locale = device.locale;
     std::replace(locale.begin(), locale.end(), '_', '-');
@@ -107,6 +126,12 @@ proto::finsky::response::ResponseWrapper api::upload_device_config(const std::st
     }
     if (gcm_reg_id.length() > 0)
         req.set_gcmregistrationid(gcm_reg_id);
+    req.mutable_shortdescription()->set_brand(device.build_brand);
+    req.mutable_shortdescription()->set_manufacturer(device.build_manufacturer);
+    req.mutable_shortdescription()->set_fingerprint(device.build_fingerprint);
+    req.mutable_shortdescription()->set_usercount(1);
+    req.mutable_shortdescription()->set_securitypatch(device.build_security_patch);
+    req.mutable_dataservicesubscriber();
 #ifndef NDEBUG
     printf("Upload Device Config: %s\n", req.DebugString().c_str());
 #endif

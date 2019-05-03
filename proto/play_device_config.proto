@@ -23,7 +23,7 @@ message ShortDescription {
     optional string securityPatch = 7;
 }
 message AccountInfo {
-    optional string androidIdAndUserHash = 1;
+    optional string androidIdAndUserHash = 1; // sha256(androidId + "-" + accountName)
 }
 message UploadDeviceConfigRequest {
     optional gsf.DeviceConfigurationProto deviceConfiguration = 1;

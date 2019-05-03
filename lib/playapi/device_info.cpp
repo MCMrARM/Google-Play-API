@@ -364,5 +364,6 @@ void device_info::fill_device_config_proto(proto::gsf::DeviceConfigurationProto&
         if (feature_add_gles_version_if_zero || e.second != 0)
             feature->set_glesversion(e.second);
     }
+    config.set_screenlayout2((int) 2);
     config.set_keyguarddevicesecure(config_keyguard_device_secure);
 }

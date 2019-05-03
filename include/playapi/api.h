@@ -37,7 +37,7 @@ private:
 
     std::string build_user_agent();
 
-    void add_headers(http_request& req, const request_options& options);
+    void add_headers(http_request& req, const request_options& options, bool is_protobuf);
 
     task_ptr<void> invalidate_token();
 

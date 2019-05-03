@@ -42,10 +42,12 @@ std::string api::build_user_agent() {
     return ua.str();
 }
 
-void api::add_headers(http_request& req, const request_options& options) {
+void api::add_headers(http_request& req, const request_options& options, bool is_protobuf) {
     assert(auth_token.length() > 0);
     req.set_user_agent(build_user_agent());
     req.add_header("Authorization", "GoogleLogin auth=" + auth_token);
+    if (is_protobuf)
+        req.add_header("Content-Type", "application/x-protobuf");
     std::string locale = device.locale;
     std::replace(locale.begin(), locale.end(), '_', '-');
     req.add_header("Accept-Language", locale);
@@ -73,7 +75,7 @@ proto::finsky::response::ResponseWrapper api::send_request(http_method method, c
                                                            const request_options& options) {
     http_request req(url + path);
     req.set_method(method);
-    add_headers(req, options);
+    add_headers(req, options, !bin_data.empty());
     req.set_body(bin_data);
     auto resp = req.perform();
     if (!resp)

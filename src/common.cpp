@@ -247,7 +247,9 @@ void playapi_cli_base::perform_auth() {
                    toc.payload().tocresponse().has_cookie());
             api.toc_cookie = toc.payload().tocresponse().cookie();
             if (toc.payload().tocresponse().has_toscontent() && toc.payload().tocresponse().has_tostoken()) {
-                std::cout << "Terms of Service:" << std::endl << toc.payload().tocresponse().toscontent() << " [y/N]: ";
+                if (opt_interactive)
+                    std::cout << "Terms of Service:" << std::endl
+                              << toc.payload().tocresponse().toscontent() << " [y/N]: ";
                 bool allow_marketing_emails = false;
                 if (!opt_accept_tos) {
                     std::string str;

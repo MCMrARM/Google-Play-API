@@ -27,3 +27,7 @@ target_include_directories(gplayapi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include $
 add_executable(gplaydl src/gplaydl.cpp src/common.cpp src/config.cpp src/config.h)
 target_link_libraries(gplaydl gplayapi)
 target_include_directories(gplaydl PUBLIC ${CURL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
+
+add_executable(gplayver src/gplayver.cpp src/common.cpp src/config.cpp src/config.h)
+target_link_libraries(gplayver gplayapi)
+target_include_directories(gplayver PUBLIC ${CURL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})

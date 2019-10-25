@@ -130,6 +130,7 @@ void playapi_cli_base::print_global_help() {
     std::cout << "-i   --interactive      Enables interactive mode" << std::endl;
     std::cout << "-u   --email            Email to use for automatic login" << std::endl;
     std::cout << "-p   --password         Password to use for automatic login" << std::endl;
+    std::cout << "-t   --token            Token to use for automatic login" << std::endl;
     std::cout << "-sa  --save-auth        Save authentication information to file" << std::endl;
     std::cout << "-tos --accept-tos       Automatically accept ToS if needed" << std::endl;
     std::cout << "-d   --device           Use the specified device configuration file" << std::endl;
@@ -143,6 +144,8 @@ bool playapi_cli_base::parse_arg(arg_list &list, const char *key) {
         opt_email = list.next_value();
     else if (strcmp(key, "-p") == 0 || strcmp(key, "--password") == 0)
         opt_password = list.next_value();
+    else if (strcmp(key, "-t") == 0 || strcmp(key, "--token") == 0)
+        opt_token = list.next_value();
     else if (strcmp(key, "-sa") == 0 || strcmp(key, "--save-auth") == 0)
         opt_save_auth = true;
     else if (strcmp(key, "-tos") == 0 || strcmp(key, "--accept-tos") == 0)
@@ -192,7 +195,17 @@ void playapi_cli_base::perform_auth() {
     dev_state.save();
 
     login_api.set_checkin_data(dev_state.checkin_data);
-    if (conf.user_token.length() <= 0) {
+    if (opt_token.length() > 0) {
+        login_api.set_token(opt_email, opt_token);
+        if (!opt_login_no_verify) {
+            try {
+                login_api.verify()->call();
+            } catch (std::runtime_error &err) {
+                std::cerr << "error: bad token" << std::endl;
+                exit(1);
+            }
+        }
+    } else if (conf.user_token.length() <= 0) {
         if (opt_email.length() > 0 && opt_password.length() > 0) {
             login_api.perform(opt_email, opt_password);
             if (opt_save_auth) {

@@ -9,7 +9,7 @@ class playapi_cli_base {
 
 public:
     bool opt_interactive = false;
-    std::string opt_email, opt_password;
+    std::string opt_email, opt_password, opt_token;
     bool opt_save_auth = false, opt_login_no_verify = false;
     bool opt_accept_tos = false;
     std::string opt_device_path = "devices/default.conf";

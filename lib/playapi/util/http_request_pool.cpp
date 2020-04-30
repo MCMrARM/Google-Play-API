@@ -66,9 +66,9 @@ void http_request_pool::handle_socket_action(curl_socket_t socket, int flags) {
         if (m->msg == CURLMSG_DONE) {
             base_entry* entry;
             curl_easy_getinfo(m->easy_handle, CURLINFO_PRIVATE, &entry);
+            curl_easy_setopt(m->easy_handle, CURLOPT_PRIVATE, NULL);
             entry->done(m->easy_handle, m->data.result);
             delete entry;
-            curl_easy_setopt(m->easy_handle, CURLOPT_PRIVATE, NULL);
         }
     }
 }

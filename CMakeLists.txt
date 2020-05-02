@@ -3,13 +3,10 @@ project(gplaydl)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Protobuf REQUIRED)
-find_package(LibUV REQUIRED)
 
 if (NOT DEFINED Protobuf_LIBRARIES)
     set(Protobuf_LIBRARIES ${PROTOBUF_LIBRARIES})

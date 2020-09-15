@@ -62,11 +62,7 @@ public:
                                curl_off_t upnow)> progress_callback;
     typedef std::function<size_t(char* ptr, size_t size)> output_callback;
 
-    static void set_platform_curl_init_hook(std::function<void (CURL* curl)> func);
-
 private:
-
-    static std::function<void (CURL* curl)> platform_curl_init_hook;
 
     std::string url;
     std::string body;

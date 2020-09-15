@@ -2,15 +2,8 @@
 
 #include <cassert>
 #include <zlib.h>
-#include <android/log.h>
 
 using namespace playapi;
-
-std::function<void (CURL* curl)> http_request::platform_curl_init_hook;
-
-void http_request::set_platform_curl_init_hook(std::function<void(CURL *curl)> func) {
-    platform_curl_init_hook = func;
-}
 
 void url_encoded_entity::add_pair(const std::string& key, const std::string& val) {
     pairs.push_back({key, val});
@@ -121,8 +114,6 @@ CURL* http_request::build(std::stringstream& output, bool copy_body) {
     CURL* curl = curl_easy_init();
     assert(curl != nullptr);
     assert(url.length() > 0);
-    if (platform_curl_init_hook)
-        platform_curl_init_hook(curl);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     switch (method) {
         case http_method::GET:
@@ -155,9 +146,9 @@ CURL* http_request::build(std::stringstream& output, bool copy_body) {
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, follow_location ? 1L : 0L);
 
-//#ifndef NDEBUG
-    __android_log_print(ANDROID_LOG_ERROR, "playapi", "http request: %s, body = %s\n", url.c_str(), body.c_str());
-//#endif
+#ifndef NDEBUG
+    printf("http request: %s, body = %s\n", url.c_str(), body.c_str());
+#endif
     if (callback_output) {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &callback_output);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
@@ -179,9 +170,9 @@ http_response http_request::perform() {
     CURLcode ret = curl_easy_perform(curl);
     long status;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-//#ifndef NDEBUG
-    __android_log_print(ANDROID_LOG_ERROR, "playapi", "http response body: %s\n", output.str().c_str());
-//#endif
+#ifndef NDEBUG
+    printf("http response body: %s\n", output.str().c_str());
+#endif
     return http_response(curl, ret, status, output.str());
 }
 
@@ -210,8 +201,8 @@ CURL* http_request::perform(std::function<void(http_response)> success, std::fun
 void http_request::pool_entry::done(CURL* curl, CURLcode code) {
     long status;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-//#ifndef NDEBUG
-    __android_log_print(ANDROID_LOG_ERROR, "playapi", "http response body (%i %li): %s\n", code, status, output.str().c_str());
-//#endif
+#ifndef NDEBUG
+    printf("http response body: %s\n", output.str().c_str());
+#endif
     success(http_response(curl, code, status, output.str()));
 }

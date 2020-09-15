@@ -244,6 +244,11 @@ message AppDetails {
     optional int32 targetSdkVersion = 32;
     optional string preregistrationPromoCode = 33;
     optional download.InstallDetails installDetails = 34;
+    optional TestingProgramInfo testingProgramInfo = 35;
+}
+message TestingProgramInfo {
+    optional bool subscribed = 2;
+    optional bool subscribed1 = 3;
 }
 message AlbumDetails {
     optional string name = 1;

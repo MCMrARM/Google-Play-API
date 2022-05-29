@@ -6,7 +6,6 @@
 #include <functional>
 #include <sstream>
 #include <curl/curl.h>
-#include "http_request_pool.h"
 
 namespace playapi {
 
@@ -30,14 +29,13 @@ struct http_response {
 
 private:
 
-    CURL* curl;
     CURLcode curlCode;
     long statusCode;
     std::string body;
 
 public:
 
-    http_response(CURL* curl, CURLcode curlCode, long statusCode, std::string body);
+    http_response(CURLcode curlCode, long statusCode, std::string body);
     http_response(http_response&& r);
     ~http_response();
 
@@ -80,18 +78,6 @@ private:
     static int curl_xferinfo(void* ptr, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
 
     CURL* build(std::stringstream& output, bool copy_body = false);
-
-    struct pool_entry : public http_request_pool::base_entry {
-        std::stringstream output;
-        std::function<void (http_response)> success;
-        std::function<void (std::exception_ptr)> error;
-        progress_callback callback_progress;
-        output_callback callback_output;
-
-        ~pool_entry() override = default;
-        void done(CURL* curl, CURLcode code) override;
-    };
-
 public:
 
     http_request() {}
@@ -124,8 +110,7 @@ public:
 
     http_response perform();
 
-    CURL* perform(std::function<void (http_response)> success, std::function<void (std::exception_ptr)> error,
-                  http_request_pool& pool = http_request_pool::default_instance());
+    void perform(std::function<void (http_response)> success, std::function<void (std::exception_ptr)> error);
 
 };
 

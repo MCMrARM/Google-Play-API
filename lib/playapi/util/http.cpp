@@ -175,18 +175,19 @@ http_response http_request::perform() {
 }
 
 void http_request::perform(std::function<void(http_response)> success, std::function<void(std::exception_ptr)> error) {
-    std::thread([req = *this, success, error] mutable {
+    auto req = std::make_shared<http_request>(*this);
+    std::thread([req, success, error] {
         std::stringstream output;
-        CURL* curl = req.build(output);
+        CURL* curl = req->build(output);
         char errbuf[CURL_ERROR_SIZE];
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-        if (req.callback_output) {
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &req.callback_output);
+        if (req->callback_output) {
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &req->callback_output);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
         }
-        if (req.callback_progress) {
+        if (req->callback_progress) {
             curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
-            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &req.callback_progress);
+            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &req->callback_progress);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
         }
         CURLcode curlerr = curl_easy_perform(curl);
@@ -199,7 +200,7 @@ void http_request::perform(std::function<void(http_response)> success, std::func
             success(http_response(curlerr, status, output.str()));
         } else {
             std::stringstream errormsg;
-            errormsg << "Failed to perform http request to " << req.url << " : CURLcode " << curlerr << " Details: " << errbuf;
+            errormsg << "Failed to perform http request to " << req->url << " : CURLcode " << curlerr << " Details: " << errbuf;
             try {
                 throw std::runtime_error(errormsg.str().data());
             } catch (...) {

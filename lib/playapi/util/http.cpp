@@ -176,7 +176,7 @@ http_response http_request::perform() {
 
 void http_request::perform(std::function<void(http_response)> success, std::function<void(std::exception_ptr)> error) {
     auto req = std::make_shared<http_request>(*this);
-    std::thread([req, success, error] {
+    std::thread([req, success, error]() {
         std::stringstream output;
         CURL* curl = req->build(output);
         char errbuf[CURL_ERROR_SIZE];

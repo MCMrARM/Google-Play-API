@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <zlib.h>
 #include <thread>
+#include <memory>
 
 using namespace playapi;
 

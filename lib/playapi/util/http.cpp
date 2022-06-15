@@ -1,7 +1,10 @@
 #include <playapi/util/http.h>
 
 #include <cassert>
+#include <stdexcept>
 #include <zlib.h>
+#include <thread>
+#include <memory>
 
 using namespace playapi;
 
@@ -35,32 +38,27 @@ std::string url_encoded_entity::encode() const {
     return std::move(ret);
 }
 
-http_response::http_response(CURL* curl, CURLcode curlCode, long statusCode, std::string body) :
-        curl(curl), curlCode(curlCode), statusCode(statusCode), body(std::move(body)) {
+http_response::http_response(CURLcode curlCode, long statusCode, std::string body) :
+        curlCode(curlCode), statusCode(statusCode), body(std::move(body)) {
     //
 }
 
-http_response::http_response(http_response&& r) : curl(r.curl), curlCode(r.curlCode), statusCode(r.statusCode),
+http_response::http_response(http_response&& r) : curlCode(r.curlCode), statusCode(r.statusCode),
                                                   body(r.body) {
-    r.curl = nullptr;
     r.curlCode = CURLE_FAILED_INIT;
     r.statusCode = 0;
     r.body = std::string();
 }
 
 http_response& http_response::operator=(http_response&& r) {
-    curl = r.curl;
     curlCode = r.curlCode;
     body = r.body;
-    r.curl = nullptr;
     r.curlCode = CURLE_FAILED_INIT;
     r.body = std::string();
     return *this;
 }
 
 http_response::~http_response() {
-    curl_easy_cleanup(curl);
-    curl = nullptr;
 }
 
 void http_request::set_body(const url_encoded_entity& ent) {
@@ -173,36 +171,43 @@ http_response http_request::perform() {
 #ifndef NDEBUG
     printf("http response body: %s\n", output.str().c_str());
 #endif
-    return http_response(curl, ret, status, output.str());
+    curl_easy_cleanup(curl);
+    return http_response(ret, status, output.str());
 }
 
-CURL* http_request::perform(std::function<void(http_response)> success, std::function<void(std::exception_ptr)> error,
-                            http_request_pool& pool) {
-    pool_entry* ei = new pool_entry;
-    ei->success = success;
-    ei->error = error;
-    CURL* curl = build(ei->output, true);
-    if (callback_output) {
-        ei->callback_output = callback_output;
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ei->callback_output);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
-    }
-    if (callback_progress) {
-        ei->callback_progress = callback_progress;
-        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
-        curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &ei->callback_progress);
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-    }
-    curl_easy_setopt(curl, CURLOPT_PRIVATE, ei);
-    pool.add(curl);
-    return curl;
-}
-
-void http_request::pool_entry::done(CURL* curl, CURLcode code) {
-    long status;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-#ifndef NDEBUG
-    printf("http response body: %s\n", output.str().c_str());
-#endif
-    success(http_response(curl, code, status, output.str()));
+void http_request::perform(std::function<void(http_response)> success, std::function<void(std::exception_ptr)> error) {
+    auto req = std::make_shared<http_request>(*this);
+    std::thread([req, success, error]() {
+        std::stringstream output;
+        CURL* curl = req->build(output);
+        char errbuf[CURL_ERROR_SIZE];
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+        if (req->callback_output) {
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &req->callback_output);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_func);
+        }
+        if (req->callback_progress) {
+            curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_xferinfo);
+            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &req->callback_progress);
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+        }
+        CURLcode curlerr = curl_easy_perform(curl);
+        if (curlerr == CURLE_OK) {
+            long status;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    #ifndef NDEBUG
+            printf("http response body: %s\n", output.str().c_str());
+    #endif
+            success(http_response(curlerr, status, output.str()));
+        } else {
+            std::stringstream errormsg;
+            errormsg << "Failed to perform http request to " << req->url << " : CURLcode " << curlerr << " Details: " << errbuf;
+            try {
+                throw std::runtime_error(errormsg.str().data());
+            } catch (...) {
+                error(std::current_exception());
+            }
+        }
+        curl_easy_cleanup(curl);
+    }).detach();
 }
